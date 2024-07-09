@@ -12,6 +12,7 @@ export default function Pixi() {
   const [multiplier, setMultiplier] = useState<number>(1)
   const [xPosition, setXPosition] = useState<number>(300)
   const [yPosition, setYPosition] = useState<number>(500)
+  const [audioEnabled, setAudioEnabled] = useState<boolean>(false)
   const [lastResults, setLastResults] = useState<number[]>([])
   const [crashValue, setCrashValue] = useState<number>(
     getMultiplier(getHash()).multiplier
@@ -70,7 +71,7 @@ export default function Pixi() {
         setMultiplier((currentMultiplier) => {
           const newMultiplier = currentMultiplier * 1.003
           if (newMultiplier >= crashValue) {
-            //play() // Uncomment this line to play the explosion sound on crash
+            if (audioEnabled) play()
             setCrashed(true)
             setRunning(false)
             return crashValue
@@ -88,7 +89,7 @@ export default function Pixi() {
       }
     }
     return () => clearTimeout(timeoutId)
-  }, [crashValue, running, multiplier, rotationFinal, play])
+  }, [crashValue, running, multiplier, rotationFinal, play, audioEnabled])
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null
