@@ -1,0 +1,42 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 8080",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@pixi/app": "^7.4.2",
+    "@pixi/assets": "^7.4.2",
+    "@pixi/core": "^7.4.2",
+    "@pixi/display": "^7.4.2",
+    "@pixi/graphics": "^7.4.2",
+    "@pixi/mesh": "^7.4.2",
+    "@pixi/mesh-extras": "^7.4.2",
+    "@pixi/particle-container": "^7.4.2",
+    "@pixi/react": "^7.1.2",
+    "@pixi/sprite": "^7.4.2",
+    "@pixi/sprite-animated": "^7.4.2",
+    "@pixi/sprite-tiling": "^7.4.2",
+    "@pixi/text": "^7.4.2",
+    "@pixi/text-bitmap": "^7.4.2",
+    "next": "14.2.4",
+    "pixi.js": "^8.2.2",
+    "react": "^18",
+    "react-dom": "^18",
+    "use-sound": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.4",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
