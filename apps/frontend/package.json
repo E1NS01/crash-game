@@ -23,13 +23,16 @@
     "@pixi/sprite-tiling": "^7.4.2",
     "@pixi/text": "^7.4.2",
     "@pixi/text-bitmap": "^7.4.2",
+    "lodash": "^4.17.21",
     "next": "14.2.4",
     "pixi.js": "^8.2.2",
     "react": "^18",
     "react-dom": "^18",
+    "socket.io-client": "^4.7.5",
     "use-sound": "^4.0.3"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

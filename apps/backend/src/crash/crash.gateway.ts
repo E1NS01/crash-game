@@ -56,11 +56,10 @@ export class CrashGateway
     this.server.emit('connectedClients', this.connectedClients);
   }
 
-  @SubscribeMessage('message')
-  handleMessage(client: Socket, payload: string): void {
-    this.startIncreasingMultiplier();
-    this.logger.log(`Message: ${this.crashValue}`);
-    this.server.emit('message', payload);
+  @SubscribeMessage('getConnectedClients')
+  handleGetConnectedClients(client: Socket): void {
+    this.logger.log('Getting connected clients');
+    client.emit('connectedClients', this.connectedClients);
   }
 
   @SubscribeMessage('newBet')
@@ -69,20 +68,22 @@ export class CrashGateway
     this.server.emit('betPlaced', payload);
   }
 
-  startIncreasingMultiplier() {
+  startIncreasingMultiplier(): void {
     this.running = true;
     this.multiplierInterval = setInterval(() => {
       if (!this.running) return;
-      this.multiplier *= 1.002;
+      this.multiplier *= 1.003;
       if (this.multiplier >= this.crashValue) {
         this.stopIncreasingMultiplier();
         this.server.emit('crash', this.oldCrashValue, this.oldCrashHash);
+        return;
       }
-      console.log(this.multiplier);
-    }, 10);
+      this.server.emit('multiUpdate', this.multiplier);
+    }, 1000 / 60);
   }
 
-  stopIncreasingMultiplier() {
+  stopIncreasingMultiplier(): void {
+    clearInterval(this.multiplierInterval as unknown as number);
     this.running = false;
     this.multiplier = 1.0;
     this.oldCrashValue = this.crashValue;
@@ -94,8 +95,9 @@ export class CrashGateway
     this.delayBetweenGames();
   }
 
-  delayBetweenGames() {
+  delayBetweenGames(): void {
     setTimeout(() => {
+      this.server.emit('newGame');
       this.startIncreasingMultiplier();
     }, 5000);
   }
