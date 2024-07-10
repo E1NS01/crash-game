@@ -1,11 +1,11 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 import { Sprite, Stage, Text } from '@pixi/react'
 import { TextStyle } from '@pixi/text'
 import { Texture } from '@pixi/core'
 import { initSocket } from '@/helper/socketio'
 
-//import useSound from 'use-sound' -- uncomment for explosion sound effect
+//import useSound from 'use-sound' --uncomment for explosion sound effect
 
 export default function Pixi() {
   const [rotation, setRotation] = useState<number>(1.5)
@@ -13,6 +13,7 @@ export default function Pixi() {
   const [multiplier, setMultiplier] = useState<number>(1)
   const [xPosition, setXPosition] = useState<number>(300)
   const [yPosition, setYPosition] = useState<number>(500)
+  const [thrusterLength, setThrusterLength] = useState<number>(0.01)
   const [lastResults, setLastResults] = useState<any[]>([])
   const [playerCount, setPlayerCount] = useState<number>(0)
   const [crashValue, setCrashValue] = useState<number>(Infinity)
@@ -20,18 +21,23 @@ export default function Pixi() {
   const [currentHash, setCurrentHash] = useState<string>('')
   const [running, setRunning] = useState<boolean>(false)
   const [crashed, setCrashed] = useState<boolean>(true)
-  const [countdown, setCountdown] = useState<number>(5)
+  const [bet, setBet] = useState<number>(0)
+  const [betAmount, setBetAmount] = useState<number>(0)
+  const [balance, setBalance] = useState<number>(1000)
+  const [betPlaced, setBetPlaced] = useState<boolean>(false)
 
   const rocket = 'http://localhost:8080/3drocket.png'
   const scene = 'http://localhost:8080/planet.jpg'
   const explosion = 'http://localhost:8080/explode-small.png'
+  const engine = 'http://localhost:8080/engine.png'
 
-  //uncomment for explosion sound effect
-  /* 
+  /* --uncomment for explosion sound effect
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false)
   const [play] = useSound('http://localhost:8080/explosion-sound.mp3', {
     volume: 0.5,
-  }) 
+    }) 
+  const audioOff = 'http://localhost:8080/audio-off.png'
+  const audioOn = 'http://localhost:8080/audio-on.png'
   */
 
   const updatedResultsRef = useRef(false)
@@ -53,11 +59,14 @@ export default function Pixi() {
         setLastResults((currentResults) => {
           return [...currentResults, { value, hash }].splice(-10)
         })
+        //play() --uncomment for explosion sound effect
         updatedResultsRef.current = true
       }
       setMultiplier(value)
       setCrashed(true)
       setRunning(false)
+
+      setBetPlaced(false)
     })
     socket.on('newGame', () => {
       setCrashed(false)
@@ -67,26 +76,38 @@ export default function Pixi() {
       setMultiplier(1)
       setXPosition(300)
       setYPosition(500)
+      setThrusterLength(0.01)
       setRotationFinal(false)
       updatedResultsRef.current = false
     })
-    return () => {
-      socket.close()
-    }
   }, [])
 
   useEffect(() => {
-    if (running) {
-      rotateSprite()
-    }
-    multiplier
-    function rotateSprite() {
+    let animationFrameId: number
+
+    const rotateSprite = () => {
       if (!rotationFinal) {
-        setXPosition((currentXPosition) => currentXPosition + 0.75)
-        setYPosition((currentYPosition) => currentYPosition - 0.75)
+        setXPosition((currentXPosition) => currentXPosition + 0.33)
+        setYPosition((currentYPosition) => currentYPosition - 0.33)
+        animationFrameId = requestAnimationFrame(rotateSprite)
+      }
+      if (rotationFinal && thrusterLength <= 0.4) {
+        setThrusterLength(
+          (currentThrusterLength) => (currentThrusterLength += 0.001)
+        )
       }
     }
-  }, [multiplier, running, rotationFinal])
+
+    if (running) {
+      animationFrameId = requestAnimationFrame(rotateSprite)
+    }
+
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+      }
+    }
+  }, [running, rotationFinal, yPosition, thrusterLength])
 
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null
@@ -115,6 +136,31 @@ export default function Pixi() {
     }
   }, [running])
 
+  function handleFormSubmit(e: FormEvent<HTMLFormElement>): void {
+    e.preventDefault()
+    if (betPlaced && !crashed) {
+      setBet(0)
+      setBetPlaced(false)
+      takeProfit()
+      return
+    } else if (!running) {
+      //placeBet()
+      updateBalance(-bet)
+      setBet(betAmount)
+      setBetPlaced(true)
+    }
+  }
+  function handleBetChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setBetAmount(parseInt(e.target.value))
+  }
+  function updateBalance(amount: number): void {
+    setBalance((currentBalance) => currentBalance + amount)
+  }
+  function takeProfit(): void {
+    const profit = parseInt((bet * multiplier).toFixed(2))
+    updateBalance(profit)
+  }
+
   const newGameStyle = new TextStyle({ fontSize: 40, fill: 'black' })
   const multiplierStyle = new TextStyle({ fontSize: 40, fill: 'white' })
   const playerCounterStyle = new TextStyle({ fontSize: 20, fill: 'white' })
@@ -130,10 +176,16 @@ export default function Pixi() {
           y={150}
           style={multiplierStyle}
         />
+        {!crashed && rotationFinal && (
+          <Sprite
+            image={engine}
+            x={679}
+            y={145}
+            scale={{ x: 0.4, y: thrusterLength }}
+          />
+        )}
         <Sprite
           image={crashed ? explosion : rocket}
-          width={400}
-          height={400}
           x={xPosition}
           y={yPosition}
           scale={{ x: 0.5, y: 0.5 }}
@@ -170,7 +222,6 @@ export default function Pixi() {
               y={275}
               style={newGameStyle}
             />
-            <Text text={`${countdown}`} x={360} y={350} style={newGameStyle} />
           </>
         )}
       </Stage>
@@ -186,6 +237,19 @@ export default function Pixi() {
             {result.value.toFixed(2)}
           </p>
         ))}
+      </div>
+      <div className='flex'>
+        <form onSubmit={handleFormSubmit}>
+          <input
+            type='number'
+            className='text-black'
+            onChange={handleBetChange}
+          />
+          <button type='submit' className='text-white'>
+            {betPlaced ? 'Take Profit' : 'Place bet'}
+          </button>
+        </form>
+        <p className='px-3'>{`balance: ${balance}`}</p>
       </div>
     </>
   )
