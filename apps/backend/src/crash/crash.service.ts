@@ -27,7 +27,6 @@ export class CrashService {
   }
 
   async newGame(hash: string, multiplier: number) {
-    console.log('new game');
     const newGame = await this.prisma.bet.create({
       data: {
         hash,

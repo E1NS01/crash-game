@@ -69,9 +69,10 @@ export class CrashGateway
   }
 
   @SubscribeMessage('getConnectedClients')
-  handleGetConnectedClients(client: Socket): void {
+  handleGetConnectedClients(client: Socket): number {
     this.logger.log('Getting connected clients');
     client.emit('connectedClients', this.connectedClients);
+    return this.connectedClients;
   }
 
   @SubscribeMessage('newBet')
