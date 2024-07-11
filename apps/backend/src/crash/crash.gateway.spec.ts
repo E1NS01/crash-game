@@ -75,18 +75,18 @@ describe('CrashGateway', () => {
 
   // Test if the gateway is handling new connections
   it('should handle new client connections', () => {
-    gateway.handleConnection(clientSocket as Socket);
+    gateway.handleConnection();
     clientSocket.on('connectedClients', (connectedClients) => {
       expect(connectedClients).toBe(1);
     });
   });
 
   it('should handle client disconnections', () => {
-    gateway.handleConnection(clientSocket as Socket);
+    gateway.handleConnection();
     clientSocket.on('connectedClients', (connectedClients) => {
       expect(connectedClients).toBe(1);
     });
-    gateway.handleDisconnect(clientSocket as Socket);
+    gateway.handleDisconnect();
     expect(gateway.handleGetConnectedClients(clientSocket as Socket)).toBe(0);
   });
 

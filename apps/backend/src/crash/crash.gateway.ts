@@ -20,7 +20,7 @@ export class CrashGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   @WebSocketServer() server: Server;
-  private logger: Logger = new Logger('EventsGateway');
+  private logger: Logger = new Logger('CrashGateway');
   private connectedClients: number = 0;
 
   private multiplier: number = 1;
@@ -37,6 +37,13 @@ export class CrashGateway
 
   constructor(private crashService: CrashService) {}
 
+  /**
+   * Initializes the WebSocket
+   * This initializes the WebSocket and sets the crash value and hash to the last games' values.
+   * If there is no last game, it generates a new game with a new hash and multiplier.
+   *
+   * @returns {Promise<void>}
+   */
   async afterInit() {
     this.logger.log('WebSocket initialized');
     const lastGame = await this.crashService.getLastGame();
@@ -46,8 +53,6 @@ export class CrashGateway
 
       this.crashValue = startData.multiplier;
       this.crashHash = startData.hash;
-
-      console.log(this.crashHash, this.crashValue);
     } else {
       const startData = this.crashService.getMultiplier(lastGame.hash);
       this.crashValue = startData.multiplier;
@@ -56,23 +61,39 @@ export class CrashGateway
     this.delayBetweenGames();
   }
 
-  handleConnection(client: Socket) {
-    this.logger.log(`Client connected: ${client.id}`);
+  /**
+   * Handles a new connection
+   *
+   * This function handles a new connection and increments the connected clients count.
+   * It then emits 'connectedClients' to the clients with the new count.
+   * @returns {void}
+   */
+  handleConnection() {
     this.connectedClients++;
     this.server.emit('connectedClients', this.connectedClients);
   }
-
-  handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`);
+  /**
+   * Handles a disconnection event
+   *
+   * This function handles a disconnection and decrements the connected clients count.
+   * It then emits 'connectedClients' to the clients with the new count.
+   * @returns {void}
+   */
+  handleDisconnect() {
     this.connectedClients--;
     this.server.emit('connectedClients', this.connectedClients);
   }
 
+  /**
+   * Handles a new connection
+   *
+   * This function handles a new connection and increments the connected clients count.
+   * It then emits 'connectedClients' to the clients with the new count.
+   * @returns {void}
+   */
   @SubscribeMessage('getConnectedClients')
-  handleGetConnectedClients(client: Socket): number {
-    this.logger.log('Getting connected clients');
+  handleGetConnectedClients(client: Socket): void {
     client.emit('connectedClients', this.connectedClients);
-    return this.connectedClients;
   }
 
   @SubscribeMessage('newBet')
@@ -87,6 +108,15 @@ export class CrashGateway
   @SubscribeMessage('takeProfit')
   handleTakeProfit() {}
 
+  /**
+   * Starts increasing the multiplier
+   *
+   * While the game is running this triggers the multiplier to increase by 0.3% every frame (60fps) and emits the new multiplier to the clients.
+   * Once it reaches the crash value it stops the multiplier from increasing and deactivates the game.
+   * It will then proceed to emit the crash event to the clients.
+   *
+   * @returns {void}
+   */
   startIncreasingMultiplier(): void {
     this.running = true;
     this.multiplierInterval = setInterval(async () => {
@@ -101,7 +131,15 @@ export class CrashGateway
       this.server.emit('multiUpdate', this.multiplier);
     }, 1000 / 60);
   }
-
+  /**
+   * Stops the multiplier from increasing
+   *
+   * This function stops the multiplier from increasing and sets the gamestate to not running.
+   * Then it resets the multiplier to 1.0 and sets the old crash value and hash to the current values.
+   * Finally, it generates a new crash value and hash and delays the next game.
+   *
+   * @returns {void}
+   */
   stopIncreasingMultiplier(): void {
     clearInterval(this.multiplierInterval as unknown as number);
     this.logger.log('Game Ended!');
@@ -116,6 +154,13 @@ export class CrashGateway
     this.delayBetweenGames();
   }
 
+  /**
+   * Delays the next game
+   *
+   * This function delays the next game by 5 seconds and then generates a new game.
+   *
+   * @returns {void}
+   */
   delayBetweenGames(): void {
     setTimeout(async () => {
       this.game = await this.crashService.newGame(
