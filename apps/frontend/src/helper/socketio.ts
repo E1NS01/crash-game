@@ -4,7 +4,7 @@ let socket: Socket
 
 export function initSocket() {
   if (!socket) {
-    socket = io('http://localhost:3000')
+    socket = io(process.env.NEXT_PUBLIC_WS_URL || 'https://localhost:3000')
     socket.on('connect', () => {
       console.log('Connected to server')
     })

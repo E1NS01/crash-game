@@ -26,18 +26,18 @@ export default function Pixi() {
   const [balance, setBalance] = useState<number>(1000)
   const [betPlaced, setBetPlaced] = useState<boolean>(false)
 
-  const rocket = 'http://localhost:8080/3drocket.png'
-  const scene = 'http://localhost:8080/planet.jpg'
-  const explosion = 'http://localhost:8080/explode-small.png'
-  const engine = 'http://localhost:8080/engine.png'
+  const rocket = process.env.NEXT_PUBLIC_URL + '/3drocket.png'
+  const scene = process.env.NEXT_PUBLIC_URL + '/planet.jpg'
+  const explosion = process.env.NEXT_PUBLIC_URL + '/explode-small.png'
+  const engine = process.env.NEXT_PUBLIC_URL + '/engine.png'
 
   /* --uncomment for explosion sound effect
   const [audioEnabled, setAudioEnabled] = useState<boolean>(false)
-  const [play] = useSound('http://localhost:8080/explosion-sound.mp3', {
+  const [play] = useSound(process.env.NEXT_PUBLIC_URL + '/explosion-sound.mp3', {
     volume: 0.5,
     }) 
-  const audioOff = 'http://localhost:8080/audio-off.png'
-  const audioOn = 'http://localhost:8080/audio-on.png'
+  const audioOff = process.env.NEXT_PUBLIC_URL + '/audio-off.png'
+  const audioOn = process.env.NEXT_PUBLIC_URL + '/audio-on.png'
   */
 
   const updatedResultsRef = useRef(false)

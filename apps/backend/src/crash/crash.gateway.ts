@@ -9,6 +9,7 @@ import {
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { CrashService } from './crash.service';
+import { Bet } from '@prisma/client';
 
 @WebSocketGateway({
   cors: {
@@ -32,16 +33,27 @@ export class CrashGateway
   private crashHash: string;
   private oldCrashHash: string;
 
+  private game: Bet | null;
+
   constructor(private crashService: CrashService) {}
 
-  afterInit() {
+  async afterInit() {
     this.logger.log('WebSocket initialized');
-    const firstValues = this.crashService.getMultiplier(
-      this.crashService.getHash(),
-    );
-    this.crashValue = firstValues.multiplier;
-    this.crashHash = firstValues.hash;
-    this.startIncreasingMultiplier();
+    const lastGame = await this.crashService.getLastGame();
+    if (!lastGame) {
+      const startHash = this.crashService.getHash();
+      const startData = this.crashService.getMultiplier(startHash);
+
+      this.crashValue = startData.multiplier;
+      this.crashHash = startData.hash;
+
+      console.log(this.crashHash, this.crashValue);
+    } else {
+      const startData = this.crashService.getMultiplier(lastGame.hash);
+      this.crashValue = startData.multiplier;
+      this.crashHash = startData.hash;
+    }
+    this.delayBetweenGames();
   }
 
   handleConnection(client: Socket) {
@@ -68,13 +80,20 @@ export class CrashGateway
     this.server.emit('betPlaced', payload);
   }
 
+  @SubscribeMessage('placeBet')
+  handlePlaceBet() {}
+
+  @SubscribeMessage('takeProfit')
+  handleTakeProfit() {}
+
   startIncreasingMultiplier(): void {
     this.running = true;
-    this.multiplierInterval = setInterval(() => {
+    this.multiplierInterval = setInterval(async () => {
       if (!this.running) return;
       this.multiplier *= 1.003;
       if (this.multiplier >= this.crashValue) {
         this.stopIncreasingMultiplier();
+        await this.crashService.deactivateGame(this.game.id);
         this.server.emit('crash', this.oldCrashValue, this.oldCrashHash);
         return;
       }
@@ -84,6 +103,7 @@ export class CrashGateway
 
   stopIncreasingMultiplier(): void {
     clearInterval(this.multiplierInterval as unknown as number);
+    this.logger.log('Game Ended!');
     this.running = false;
     this.multiplier = 1.0;
     this.oldCrashValue = this.crashValue;
@@ -96,8 +116,12 @@ export class CrashGateway
   }
 
   delayBetweenGames(): void {
-    setTimeout(() => {
-      this.server.emit('newGame');
+    setTimeout(async () => {
+      this.game = await this.crashService.newGame(
+        this.crashHash,
+        this.crashValue,
+      );
+      this.server.emit('newGame', this.game.id);
       this.startIncreasingMultiplier();
     }, 5000);
   }

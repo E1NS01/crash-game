@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { Bet } from '@prisma/client';
 import * as crypto from 'crypto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class CrashService {
+  constructor(private prisma: PrismaService) {}
   //generate a new SHA-256 hash from a hash or generate a new one
   getHash(oldHash?: string): string {
     if (!oldHash) {
       const hash = crypto.createHash('sha256');
-      const bytes = crypto
-        .randomBytes(Math.ceil(50 / 2))
-        .toString('hex')
-        .slice(0, 50);
+      const bytes = crypto.randomBytes(Math.ceil(50 / 2)).toString('hex');
       hash.update(bytes);
       return hash.digest('hex');
     }
@@ -24,5 +24,43 @@ export class CrashService {
 
     const multiplier = parseFloat(((100 * e - h) / (e - h) / 100.0).toFixed(2));
     return { multiplier, hash };
+  }
+
+  async newGame(hash: string, multiplier: number) {
+    console.log('new game');
+    const newGame = await this.prisma.bet.create({
+      data: {
+        hash,
+        multiplier,
+        game: 'crash',
+      },
+    });
+    return newGame;
+  }
+
+  async deactivateGame(gameId: number) {
+    console.log('deactivate game');
+    const updatedGame = await this.prisma.bet.update({
+      where: {
+        id: gameId,
+      },
+      data: {
+        active: false,
+      },
+    });
+    return updatedGame;
+  }
+
+  async getLastGame(): Promise<Bet | null> {
+    const lastGame = await this.prisma.bet.findFirst({
+      where: {
+        game: 'crash',
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+    if (!lastGame) return null;
+    return lastGame;
   }
 }
