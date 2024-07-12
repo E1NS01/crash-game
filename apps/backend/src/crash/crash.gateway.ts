@@ -154,7 +154,7 @@ export class CrashGateway
   async handleTakeProfit(client: Socket, data: TakeProfitData): Promise<void> {
     this.logger.log(`Taking profit: ${data.betId} - ${data.multiplier}`);
     const bet = await this.crashService.takeProfit(data.betId, data.multiplier);
-    client.emit('profitTaken', bet);
+    client.emit('profitTaken', bet, data.multiplier);
   }
 
   /**

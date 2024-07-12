@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 255, 255, 255; /* Light text color for contrast */
-  --background-start-rgb: 25, 25, 112; /* Deep dark blue, similar to midnight blue */
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 25, 25, 112;
 }
 
 body {
