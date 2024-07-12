@@ -89,8 +89,6 @@ export class CrashService {
    * Once it reaches the crash value it stops the multiplier from increasing and deactivates the game.
    * It will then proceed to emit the crash event to the clients.
    *
-   * TODO: Constant interval and ajustable multiplier increase rate
-   *
    * @returns {void}
    */
   startIncreasingMultiplier(): void {
