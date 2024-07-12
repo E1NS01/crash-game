@@ -10,7 +10,22 @@ import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { CrashService } from './crash.service';
 import { Bet } from '@prisma/client';
-
+import { UserService } from 'src/user/user.service';
+/**
+ * CrashGateway
+ *
+ * This WebSocket Gateway manages the real-time communication for the Crash game.
+ * It handles the connection and disconnection of clients, the broadcasting of game state updates
+ * and bet-related events.
+ *
+ * Key responsibilities:
+ * - Managing WebSocket connections and disconnections
+ * - Processing player bets and profit-taking actions
+ * - Emitting real-time updates to connected clients
+ *
+ * The gateway uses SOcket.IO for WebSocket communication and interacts with the CrashService to manage
+ * gamelogic and database operations.
+ */
 @WebSocketGateway({
   cors: {
     origin: '*', // Change to frontend domain for production
@@ -35,17 +50,26 @@ export class CrashGateway
 
   private game: Bet | null;
 
-  constructor(private crashService: CrashService) {}
+  constructor(
+    private crashService: CrashService,
+    private userService: UserService,
+  ) {}
 
   /**
    * Initializes the WebSocket
    * This initializes the WebSocket and sets the crash value and hash to the last games' values.
    * If there is no last game, it generates a new game with a new hash and multiplier.
    *
+   * For testing purposes, it creates a new user if there no user with the id 1.
+   *
    * @returns {Promise<void>}
    */
   async afterInit() {
     this.logger.log('WebSocket initialized');
+    const user = await this.userService.getUserById(1);
+    if (!user) {
+      await this.userService.createUser();
+    }
     const lastGame = await this.crashService.getLastGame();
     if (!lastGame) {
       const startHash = this.crashService.getHash();
@@ -96,17 +120,29 @@ export class CrashGateway
     client.emit('connectedClients', this.connectedClients);
   }
 
-  @SubscribeMessage('newBet')
-  handleNewBet(client: Socket, payload: number): void {
-    this.logger.log(`New bet: ${payload}`);
-    this.server.emit('betPlaced', payload);
+  @SubscribeMessage('placeBet')
+  async handleNewBet(
+    client: Socket,
+    data: { betAmount: number; gameId: number },
+  ): Promise<void> {
+    this.logger.log(`New bet: ${data.gameId} - ${data.betAmount}`);
+    const bet = await this.crashService.placeBet(
+      data.betAmount,
+      1,
+      data.gameId,
+    );
+    client.emit('betPlaced', bet);
   }
 
-  @SubscribeMessage('placeBet')
-  handlePlaceBet() {}
-
   @SubscribeMessage('takeProfit')
-  handleTakeProfit() {}
+  async handleTakeProfit(
+    client: Socket,
+    data: { multiplier: number; betId: number },
+  ): Promise<void> {
+    this.logger.log(`Taking profit: ${data.betId} - ${data.multiplier}`);
+    const bet = await this.crashService.takeProfit(data.betId, data.multiplier);
+    client.emit('profitTaken', bet);
+  }
 
   /**
    * Starts increasing the multiplier
@@ -161,13 +197,14 @@ export class CrashGateway
    *
    * @returns {void}
    */
-  delayBetweenGames(): void {
+  async delayBetweenGames(): Promise<void> {
+    this.game = await this.crashService.newGame(
+      this.crashHash,
+      this.crashValue,
+    );
+    this.logger.log(this.game.id);
+    this.server.emit('newGame', this.game.id);
     setTimeout(async () => {
-      this.game = await this.crashService.newGame(
-        this.crashHash,
-        this.crashValue,
-      );
-      this.server.emit('newGame', this.game.id);
       this.startIncreasingMultiplier();
     }, 5000);
   }

@@ -2,10 +2,32 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Bet, BetParticipant } from '@prisma/client';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { UserService } from 'src/user/user.service';
 
+/**
+ * CrashService
+ *
+ * This service manages the core functionality of the Crash game. A game of Crash is a simple game where a multiplier increases over time.
+ *
+ * Key responsibilities:
+ * - Generating game hashes and multipliers
+ * - Creating and managing game instance in the Database
+ * - Handling player bets and profit-taking
+ * - Managing game state (active/inactive)
+ *
+ * The service uses cryptographic functions to generate provably fair hashes and unpredictable game outcomes,
+ * and it interacts with the database through Prisma to persist game data and player actions.
+ *
+ * Usage:
+ * This service should be injected into the CrashGateway or other services that need to interact with the Crash game machanics.
+ * It provides methods for all core game operations, from initiating new games to processing player actions.
+ */
 @Injectable()
 export class CrashService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private userService: UserService,
+  ) {}
   private logger: Logger = new Logger('CrashService');
 
   /**
@@ -136,21 +158,13 @@ export class CrashService {
             id: gameId,
           },
         });
-
+        this.logger.log(`Bet found: ${bet}`);
         if (!bet.active) {
           throw new Error('Game is not active');
         }
 
-        await prisma.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            balance: {
-              decrement: amount,
-            },
-          },
-        });
+        await this.userService.updateUserBalance(userId, -amount);
+
         return await prisma.betParticipant.create({
           data: {
             amount,
@@ -201,12 +215,14 @@ export class CrashService {
         if (!bet) {
           throw new Error('Bet not found');
         }
-
+        if (bet.tookProfit) {
+          throw new Error('User already took profit');
+        }
         if (!bet.bet.active) {
           throw new Error('Game is not active');
         }
 
-        const profit = bet.amount * multiplier;
+        const profit = parseInt((bet.amount * multiplier).toFixed(2));
 
         await prisma.user.update({
           where: {

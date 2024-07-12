@@ -9,8 +9,9 @@ RUN npm install -g @nestjs/cli prisma
 
 COPY apps/backend ./
 
-RUN npx prisma migrate dev
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 3000
-
+ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
 CMD ["npm", "run", "dev"]

@@ -16,15 +16,13 @@ export default function Pixi() {
   const [thrusterLength, setThrusterLength] = useState<number>(0.01)
   const [lastResults, setLastResults] = useState<any[]>([])
   const [playerCount, setPlayerCount] = useState<number>(0)
-  const [crashValue, setCrashValue] = useState<number>(Infinity)
-  const [lastHash, setLastHash] = useState<string>('')
-  const [currentHash, setCurrentHash] = useState<string>('')
   const [running, setRunning] = useState<boolean>(false)
   const [crashed, setCrashed] = useState<boolean>(true)
-  const [bet, setBet] = useState<number>(0)
   const [betAmount, setBetAmount] = useState<number>(0)
   const [balance, setBalance] = useState<number>(1000)
   const [betPlaced, setBetPlaced] = useState<boolean>(false)
+  const [betId, setBetId] = useState<number | 'no active bet'>('no active bet')
+  const [gameId, setGameId] = useState<number>(0)
 
   const rocket = process.env.NEXT_PUBLIC_URL + '/3drocket.png'
   const scene = process.env.NEXT_PUBLIC_URL + '/planet.jpg'
@@ -41,20 +39,21 @@ export default function Pixi() {
   */
 
   const updatedResultsRef = useRef(false)
+  const socket = initSocket()
 
   useEffect(() => {
-    const socket = initSocket()
     socket.emit('getConnectedClients')
     socket.on('connectedClients', (connectedClients: number) => {
       setPlayerCount(connectedClients)
     })
 
     socket.on('multiUpdate', (value: number) => {
+      setCrashed(false)
+      setRunning(true)
       setMultiplier(value)
     })
 
     socket.on('crash', (value: number, hash: string) => {
-      setCrashValue(value)
       if (!updatedResultsRef.current) {
         setLastResults((currentResults) => {
           return [...currentResults, { value, hash }].splice(-10)
@@ -65,22 +64,27 @@ export default function Pixi() {
       setMultiplier(value)
       setCrashed(true)
       setRunning(false)
-
       setBetPlaced(false)
     })
-    socket.on('newGame', () => {
-      setCrashed(false)
-      setRunning(true)
-      setCrashValue(Infinity)
+    socket.on('newGame', (newGameId) => {
+      console.log('new game', newGameId)
+      setGameId(newGameId)
+      setBetId('no active bet')
       setRotation(1.5)
-      setMultiplier(1)
       setXPosition(300)
       setYPosition(500)
       setThrusterLength(0.01)
       setRotationFinal(false)
       updatedResultsRef.current = false
     })
-  }, [])
+    socket.on('betPlaced', (newBet) => {
+      console.log('bet placed', newBet)
+      setBetId(newBet.id)
+    })
+    socket.on('profitTaken', (data) => {
+      console.log(data)
+    })
+  }, [socket])
 
   useEffect(() => {
     let animationFrameId: number
@@ -136,20 +140,6 @@ export default function Pixi() {
     }
   }, [running])
 
-  function handleFormSubmit(e: FormEvent<HTMLFormElement>): void {
-    e.preventDefault()
-    if (betPlaced && !crashed) {
-      setBet(0)
-      setBetPlaced(false)
-      takeProfit()
-      return
-    } else if (!running) {
-      //placeBet()
-      updateBalance(-bet)
-      setBet(betAmount)
-      setBetPlaced(true)
-    }
-  }
   function handleBetChange(e: React.ChangeEvent<HTMLInputElement>): void {
     setBetAmount(parseInt(e.target.value))
   }
@@ -157,8 +147,16 @@ export default function Pixi() {
     setBalance((currentBalance) => currentBalance + amount)
   }
   function takeProfit(): void {
-    const profit = parseInt((bet * multiplier).toFixed(2))
-    updateBalance(profit)
+    socket.emit('takeProfit', { betId, multiplier })
+  }
+
+  function placeBet(): void {
+    if (betAmount > balance) {
+      return
+    }
+    setBetPlaced(true)
+    socket.emit('placeBet', { betAmount, gameId })
+    setBalance((currentBalance) => currentBalance - betAmount)
   }
 
   const newGameStyle = new TextStyle({ fontSize: 40, fill: 'black' })
@@ -169,6 +167,8 @@ export default function Pixi() {
     <>
       <Stage width={800} height={600} options={{ background: 0x1099bb }}>
         <Sprite image={scene} height={600} width={800} alpha={0.8} />
+        <Text text={`gameID: ${gameId}`} x={80} y={0} style={multiplierStyle} />
+        <Text text={`betID: ${betId}`} x={80} y={60} style={multiplierStyle} />
         <Text text='Multiplier:' x={80} y={110} style={multiplierStyle} />
         <Text
           text={`${multiplier.toFixed(2)}x`}
@@ -239,16 +239,26 @@ export default function Pixi() {
         ))}
       </div>
       <div className='flex'>
-        <form onSubmit={handleFormSubmit}>
-          <input
-            type='number'
-            className='text-black'
-            onChange={handleBetChange}
-          />
-          <button type='submit' className='text-white'>
-            {betPlaced ? 'Take Profit' : 'Place bet'}
-          </button>
-        </form>
+        <input
+          type='number'
+          className='text-black'
+          onChange={handleBetChange}
+        />
+        <button
+          className='text-white'
+          onClick={placeBet}
+          disabled={running && betPlaced}
+        >
+          Place bet
+        </button>
+        <button
+          className='text-white'
+          onClick={takeProfit}
+          disabled={!running && !betPlaced}
+        >
+          Take Profit
+        </button>
+
         <p className='px-3'>{`balance: ${balance}`}</p>
       </div>
     </>
