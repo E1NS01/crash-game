@@ -2,9 +2,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Bet, BetParticipant } from '@prisma/client';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 import { Multiplier } from 'src/crash/interfaces/multiplier';
 import { GameDto } from './dto/CrashGameDto';
+import {
+  BetAmountTooHighError,
+  BetNotFoundError,
+  GameNotActiveError,
+  InvalidBetAmountError,
+  InvalidMultiplierError,
+  MultipleBetsError,
+  UserAlreadyProfitedError,
+} from './errors/crashErrors';
+import { validatePlaceBetInput } from './dto/PlaceBetDto';
+import validateTakeProfitInput from './dto/TakeProfitDto';
 
 /**
  * CrashService
@@ -62,14 +73,39 @@ export class CrashService {
    * @param {string} hash - A SHA256 hash as a hexadecimal string
    *
    * @returns {Multiplier}  The generated multiplier and the hash used to generate it.
+   *
+   * Formula explanation:
+   * 1. e = 2^52 (a large constant to ensure precision)
+   * 2. h = first 13 characters of the hash converted to an integer
+   * 3. If h % 33 === 0, return 1.0 as the multiplier (instant crash in 1/33 cases - value can be modified to the desired house edge)
+   * 4. Otherwise, calculate: multiplier = (100 * e - h) / (e - h)
+   * 5. Return the multiplier rounded to 2 decimal places (for human readability)
+   *
+   * Key properties:
+   * - Multiplier is always between 1.0 and theoreticaly infinity
+   * - Lower multipliers are more common, higher multipliers are rarer
+   * - The distribution is fair and unpredictable based on the input hash
+   *
    */
-  getMultiplier(hash: string): Multiplier {
-    const e = Math.pow(2, 52);
-    const h = parseInt(hash.slice(0, 13), 16);
-    if (h % 33 === 0) return { multiplier: 1.0, hash };
+  getMultiplier(hash: string, retries = 3): Multiplier {
+    try {
+      const houseEdge = 33;
+      const e = Math.pow(2, 52);
+      const h = parseInt(hash.slice(0, 13), 16);
+      if (h % houseEdge === 0) return { multiplier: 1.0, hash };
 
-    const multiplier = parseFloat(((100 * e - h) / (e - h) / 100.0).toFixed(2));
-    return { multiplier, hash };
+      const multiplier = parseFloat(
+        ((100 * e - h) / (e - h) / 100.0).toFixed(2),
+      );
+      if (multiplier < 1.0) {
+        throw new InvalidMultiplierError(multiplier);
+      }
+      return { multiplier, hash };
+    } catch (error) {
+      if (retries > 0) {
+        return this.getMultiplier(hash, retries - 1);
+      }
+    }
   }
 
   /**
@@ -82,14 +118,19 @@ export class CrashService {
    * @returns {Promise<GameDto>} The created Bet object.
    */
   async newGame(hash: string, multiplier: number): Promise<GameDto> {
-    const newGame = await this.prisma.bet.create({
-      data: {
-        hash,
-        multiplier,
-        game: 'crash',
-      },
-    });
-    return newGame;
+    try {
+      const newGame = await this.prisma.bet.create({
+        data: {
+          hash,
+          multiplier,
+          game: 'crash',
+        },
+      });
+      return newGame;
+    } catch (error) {
+      this.logger.error(error);
+      return error;
+    }
   }
 
   /**
@@ -101,15 +142,20 @@ export class CrashService {
    * @returns {Promise<Bet>} The updated Bet object.
    */
   async deactivateGame(gameId: number): Promise<Bet> {
-    const updatedGame = await this.prisma.bet.update({
-      where: {
-        id: gameId,
-      },
-      data: {
-        active: false,
-      },
-    });
-    return updatedGame;
+    try {
+      const updatedGame = await this.prisma.bet.update({
+        where: {
+          id: gameId,
+        },
+        data: {
+          active: false,
+        },
+      });
+      return updatedGame;
+    } catch (error) {
+      this.logger.error(error);
+      return error;
+    }
   }
 
   /**
@@ -120,16 +166,21 @@ export class CrashService {
    * @returns {Promise<Bet | null>} The last Bet object or null if no game is found.
    */
   async getLastGame(): Promise<Bet | null> {
-    const lastGame = await this.prisma.bet.findFirst({
-      where: {
-        game: 'crash',
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
-    if (!lastGame) return null;
-    return lastGame;
+    try {
+      const lastGame = await this.prisma.bet.findFirst({
+        where: {
+          game: 'crash',
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
+      if (!lastGame) return null;
+      return lastGame;
+    } catch (error) {
+      this.logger.error(error);
+      return error;
+    }
   }
 
   /**
@@ -150,18 +201,40 @@ export class CrashService {
     gameId: number,
   ): Promise<BetParticipant> {
     try {
+      validatePlaceBetInput({ amount, userId, gameId });
+      const minAmount = 1;
+      const maxAmount = 10000;
+
+      if (amount > maxAmount) {
+        throw new BetAmountTooHighError(amount, maxAmount);
+      }
+      if (amount < minAmount) {
+        throw new BetAmountTooHighError(amount, minAmount);
+      }
+      if (Math.floor((amount * 100) / 100) !== amount) {
+        throw new InvalidBetAmountError(amount);
+      }
+
       return await this.prisma.$transaction(async (prisma) => {
-        this.logger.log(
-          `Placing bet of ${amount} for user ${userId} on game ${gameId}`,
-        );
-        const bet = await prisma.bet.findUniqueOrThrow({
+        const existingBet = await prisma.betParticipant.findFirst({
+          where: {
+            userId,
+            betId: gameId,
+          },
+        });
+        if (existingBet) {
+          throw new MultipleBetsError(userId, gameId);
+        }
+        const bet = await prisma.bet.findUnique({
           where: {
             id: gameId,
           },
         });
-        this.logger.log(`Bet found: ${bet}`);
+        if (!bet) {
+          throw new BetNotFoundError(gameId);
+        }
         if (!bet.active) {
-          throw new Error('Game is not active');
+          throw new GameNotActiveError(gameId);
         }
 
         await this.userService.updateUserBalance(userId, -amount);
@@ -184,6 +257,7 @@ export class CrashService {
       });
     } catch (error) {
       this.logger.error(error);
+      return error;
     }
   }
 
@@ -202,6 +276,7 @@ export class CrashService {
    */
   async takeProfit(betId: number, multiplier: number): Promise<BetParticipant> {
     try {
+      validateTakeProfitInput({ betId, multiplier });
       return await this.prisma.$transaction(async (prisma) => {
         const bet = await prisma.betParticipant.findUnique({
           where: {
@@ -214,13 +289,13 @@ export class CrashService {
         });
 
         if (!bet) {
-          throw new Error('Bet not found');
+          throw new BetNotFoundError(betId);
         }
         if (bet.tookProfit) {
-          throw new Error('User already took profit');
+          throw new UserAlreadyProfitedError(bet.user.id, bet.id);
         }
         if (!bet.bet.active) {
-          throw new Error('Game is not active');
+          throw new GameNotActiveError(bet.bet.id);
         }
 
         const profit = parseFloat((bet.amount * multiplier).toFixed(2));
@@ -247,6 +322,7 @@ export class CrashService {
       });
     } catch (error) {
       this.logger.error(error);
+      return error;
     }
   }
 }

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CrashGateway } from './crash.gateway';
-import { CrashService } from './crash.service';
+import { CrashGateway } from '../crash.gateway';
+import { CrashService } from '../crash.service';
 import { io as ioc, type Socket as ClientSocket } from 'socket.io-client';
 import { Server, Socket, type Socket as ServerSocket } from 'socket.io';
 import { createServer } from 'http';

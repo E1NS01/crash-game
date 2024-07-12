@@ -10,7 +10,7 @@ import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { CrashService } from './crash.service';
 import { Bet } from '@prisma/client';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 import { TakeProfitData } from './interfaces/takeProfitData';
 import { PlaceBetData } from './interfaces/placeBetData';
 /**
