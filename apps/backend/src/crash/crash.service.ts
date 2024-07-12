@@ -16,6 +16,7 @@ import {
 } from './errors/crashErrors';
 import { validatePlaceBetInput } from './dto/PlaceBetDto';
 import validateTakeProfitInput from './dto/TakeProfitDto';
+import { CrashEventEmitter } from './crash.eventEmitter';
 
 /**
  * CrashService
@@ -23,6 +24,9 @@ import validateTakeProfitInput from './dto/TakeProfitDto';
  * This service manages the core functionality of the Crash game. A game of Crash is a simple game where a multiplier increases over time.
  *
  * Key responsibilities:
+ * - Initializing a new game loop
+ * - Starting and stopping the multiplier increase
+ * - Delaying the next game
  * - Generating game hashes and multipliers
  * - Creating and managing game instance in the Database
  * - Handling player bets and profit-taking
@@ -37,12 +41,114 @@ import validateTakeProfitInput from './dto/TakeProfitDto';
  */
 @Injectable()
 export class CrashService {
+  private multiplier: number = 1.0;
+  private updateFrequency: number = 60;
+  private multiplierIncrease: number = Math.pow(
+    parseFloat(process.env.INCREASE_PER_SECOND),
+    1 / this.updateFrequency,
+  );
+  private running: boolean = false;
+  private crashValue: number;
+  private crashHash: string;
+  private oldCrashValue: number;
+  private oldCrashHash: string;
+  private multiplierInterval: NodeJS.Timeout | null = null;
+  private game: Bet | null;
+
   constructor(
+    private crashEventEmitter: CrashEventEmitter,
     private prisma: PrismaService,
     private userService: UserService,
   ) {}
   private logger: Logger = new Logger('CrashService');
 
+  /**
+   * Initializes a new Crash game
+   * It initializes a new Crash game by generating a new hash and multiplier,
+   * or by using the last game's hash.
+   * Then it starts the game loop by calling the delayBetweenGames function.
+   */
+  async initGame(): Promise<void> {
+    const lastGame = await this.getLastGame();
+    if (!lastGame) {
+      const startHash = this.getHash();
+      const startData = this.getMultiplier(startHash);
+      this.crashValue = startData.multiplier;
+      this.crashHash = startData.hash;
+    } else {
+      const startData = this.getMultiplier(lastGame.hash);
+      this.crashValue = startData.multiplier;
+      this.crashHash = startData.hash;
+    }
+    this.delayBetweenGames();
+  }
+  /**
+   * Starts increasing the multiplier
+   *
+   * While the game is running this triggers the multiplier to increase by 0.3% every frame (60fps) and emits the new multiplier to the clients.
+   * Once it reaches the crash value it stops the multiplier from increasing and deactivates the game.
+   * It will then proceed to emit the crash event to the clients.
+   *
+   * TODO: Constant interval and ajustable multiplier increase rate
+   *
+   * @returns {void}
+   */
+  startIncreasingMultiplier(): void {
+    this.running = true;
+    this.multiplierInterval = setInterval(async () => {
+      if (!this.running) {
+        return;
+      }
+      this.multiplier *= this.multiplierIncrease;
+      if (this.multiplier >= this.crashValue) {
+        this.stopIncreasingMultiplier();
+        await this.deactivateGame(this.game.id);
+        this.crashEventEmitter.sendCrashEvent(
+          this.oldCrashValue,
+          this.oldCrashHash,
+        );
+        return;
+      }
+      this.crashEventEmitter.sendMultiplierEvent(this.multiplier);
+    }, 1000 / this.updateFrequency);
+  }
+
+  /**
+   * Stops the multiplier from increasing
+   *
+   * This function stops the multiplier from increasing and sets the gamestate to not running.
+   * Then it resets the multiplier to 1.0 and sets the old crash value and hash to the current values.
+   * Finally, it generates a new crash value and hash and delays the next game.
+   *
+   * @returns {void}
+   */
+  stopIncreasingMultiplier(): void {
+    if (this.multiplierInterval) {
+      clearInterval(this.multiplierInterval);
+    }
+    this.running = false;
+    this.multiplier = 1.0;
+    this.oldCrashValue = this.crashValue;
+    this.oldCrashHash = this.crashHash;
+    this.crashHash = this.getHash(this.oldCrashHash);
+    this.crashValue = this.getMultiplier(this.crashHash).multiplier;
+    this.delayBetweenGames();
+  }
+
+  /**
+   * Delays the next game
+   *
+   * This function delays the next game by 5 seconds and then generates a new game.
+   *
+   * @returns {void}
+   */
+  async delayBetweenGames(): Promise<void> {
+    this.game = await this.newGame(this.crashHash, this.crashValue);
+    this.crashEventEmitter.sendNewGameEvent(this.game.id);
+    setTimeout(() => {
+      this.startIncreasingMultiplier();
+    }, 5000);
+  }
   /**
    * Generates a  SHA256 hash
    *

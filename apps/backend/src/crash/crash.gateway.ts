@@ -9,10 +9,10 @@ import {
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 import { CrashService } from './crash.service';
-import { Bet } from '@prisma/client';
 import { UserService } from '../user/user.service';
 import { TakeProfitData } from './interfaces/takeProfitData';
 import { PlaceBetData } from './interfaces/placeBetData';
+import { OnEvent } from '@nestjs/event-emitter';
 /**
  * CrashGateway
  *
@@ -40,25 +40,6 @@ export class CrashGateway
   private logger: Logger = new Logger('CrashGateway');
   private connectedClients: number = 0;
 
-  private multiplier: number = 1;
-  private multiplierInterval: NodeJS.Timer | null = null;
-  private running: boolean = true;
-
-  private oldCrashValue = 1;
-  private crashValue: number;
-
-  private crashHash: string;
-  private oldCrashHash: string;
-
-  private TARGET_GROWTH_PER_SECOND = 1.1971;
-  private updateFrequency = 1000 / 30;
-  private multiplierIncrease = Math.pow(
-    this.TARGET_GROWTH_PER_SECOND,
-    1 / this.updateFrequency,
-  );
-
-  private game: Bet | null;
-
   constructor(
     private crashService: CrashService,
     private userService: UserService,
@@ -66,8 +47,7 @@ export class CrashGateway
 
   /**
    * Initializes the WebSocket
-   * This initializes the WebSocket and sets the crash value and hash to the last games' values.
-   * If there is no last game, it generates a new game with a new hash and multiplier.
+   * This initializes the WebSocket and starts the first game.
    *
    * For testing purposes, it creates a new user if there no user with the id 1.
    *
@@ -79,19 +59,7 @@ export class CrashGateway
     if (!user) {
       await this.userService.createUser();
     }
-    const lastGame = await this.crashService.getLastGame();
-    if (!lastGame) {
-      const startHash = this.crashService.getHash();
-      const startData = this.crashService.getMultiplier(startHash);
-
-      this.crashValue = startData.multiplier;
-      this.crashHash = startData.hash;
-    } else {
-      const startData = this.crashService.getMultiplier(lastGame.hash);
-      this.crashValue = startData.multiplier;
-      this.crashHash = startData.hash;
-    }
-    this.delayBetweenGames();
+    this.crashService.initGame();
   }
 
   /**
@@ -163,72 +131,37 @@ export class CrashGateway
     const bet = await this.crashService.takeProfit(data.betId, data.multiplier);
     client.emit('profitTaken', bet, data.multiplier);
   }
-
   /**
-   * Starts increasing the multiplier
+   * Handles the 'multiplier' event
    *
-   * While the game is running this triggers the multiplier to increase by 0.3% every frame (60fps) and emits the new multiplier to the clients.
-   * Once it reaches the crash value it stops the multiplier from increasing and deactivates the game.
-   * It will then proceed to emit the crash event to the clients.
-   *
-   * TODO: Constant interval and ajustable multiplier increase rate
-   *
-   * @returns {void}
+   * This function handles the 'multiplier' event and emits the new multiplier to all connected clients.
+   * @param {number} multiplier
    */
-  startIncreasingMultiplier(): void {
-    this.running = true;
-    console.log(this.multiplierIncrease);
-    this.multiplierInterval = setInterval(async () => {
-      if (!this.running) return;
-      this.multiplier *= this.multiplierIncrease;
-      if (this.multiplier >= this.crashValue) {
-        this.stopIncreasingMultiplier();
-        await this.crashService.deactivateGame(this.game.id);
-        this.server.emit('crash', this.oldCrashValue, this.oldCrashHash);
-        return;
-      }
-      this.server.emit('multiUpdate', this.multiplier);
-    }, this.updateFrequency);
-  }
-  /**
-   * Stops the multiplier from increasing
-   *
-   * This function stops the multiplier from increasing and sets the gamestate to not running.
-   * Then it resets the multiplier to 1.0 and sets the old crash value and hash to the current values.
-   * Finally, it generates a new crash value and hash and delays the next game.
-   *
-   * @returns {void}
-   */
-  stopIncreasingMultiplier(): void {
-    clearInterval(this.multiplierInterval as unknown as number);
-    this.logger.log('Game Ended!');
-    this.running = false;
-    this.multiplier = 1.0;
-    this.oldCrashValue = this.crashValue;
-    this.oldCrashHash = this.crashHash;
-    this.crashHash = this.crashService.getHash(this.oldCrashHash);
-    this.crashValue = this.crashService.getMultiplier(
-      this.crashHash,
-    ).multiplier;
-    this.delayBetweenGames();
+  @OnEvent('multiplier')
+  handleMultiplierEvent(multiplier: number): void {
+    this.server.emit('multiUpdate', multiplier);
   }
 
   /**
-   * Delays the next game
+   * Handles the 'crash' event
    *
-   * This function delays the next game by 5 seconds and then generates a new game.
-   *
-   * @returns {void}
+   * This function handles the 'crash' event and emits the crash value and hash to all connected clients.
+   * @param {number} crashValue - The crash value
+   * @param {string} crashHash - The crash hash
    */
-  async delayBetweenGames(): Promise<void> {
-    this.game = await this.crashService.newGame(
-      this.crashHash,
-      this.crashValue,
-    );
-    this.logger.log(this.game.id);
-    this.server.emit('newGame', this.game.id);
-    setTimeout(async () => {
-      this.startIncreasingMultiplier();
-    }, 5000);
+  @OnEvent('crash')
+  handleCrashEvent(crashValue: number, crashHash: string): void {
+    this.server.emit('crash', crashValue, crashHash);
+  }
+
+  /**
+   * Handles the 'newGame' event
+   *
+   * This function handles the 'newGame' event and emits the new game id to all connected clients.
+   * @param {number} gameId - The id of the new game
+   */
+  @OnEvent('newGame')
+  handleNewGameEvent(gameId: number): void {
+    this.server.emit('newGame', gameId);
   }
 }
