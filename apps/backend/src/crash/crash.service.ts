@@ -223,7 +223,7 @@ export class CrashService {
           throw new Error('Game is not active');
         }
 
-        const profit = parseInt((bet.amount * multiplier).toFixed(2));
+        const profit = parseFloat((bet.amount * multiplier).toFixed(2));
 
         await prisma.user.update({
           where: {

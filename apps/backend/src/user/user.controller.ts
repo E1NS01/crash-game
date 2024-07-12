@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserDto } from './dto/userDto';
 import { UpdateBalanceData } from './interfaces/updateBalanceData';
@@ -16,9 +16,9 @@ export class UserController {
    * @returns Promise<UserDto> - The user with the given ID or an error if the user could not be found
    */
   @Get()
-  async getUser(@Body() userId: number): Promise<UserDto> {
+  async getUser(@Query('id') userId: string): Promise<UserDto> {
     try {
-      const user = await this.userService.getUserById(userId);
+      const user = await this.userService.getUserById(parseInt(userId));
       return user;
     } catch (error) {
       return error;
