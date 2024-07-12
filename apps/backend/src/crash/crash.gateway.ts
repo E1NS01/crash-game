@@ -11,6 +11,8 @@ import { Socket, Server } from 'socket.io';
 import { CrashService } from './crash.service';
 import { Bet } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
+import { TakeProfitData } from './interfaces/takeProfitData';
+import { PlaceBetData } from './interfaces/placeBetData';
 /**
  * CrashGateway
  *
@@ -109,10 +111,10 @@ export class CrashGateway
   }
 
   /**
-   * Handles a new connection
+   * Sends the connected clients count to the client
    *
-   * This function handles a new connection and increments the connected clients count.
-   * It then emits 'connectedClients' to the clients with the new count.
+   * This function sends the connected clients count to the client that requested it.
+   * @param {Socket} client - The client that requested the connected clients count
    * @returns {void}
    */
   @SubscribeMessage('getConnectedClients')
@@ -120,11 +122,17 @@ export class CrashGateway
     client.emit('connectedClients', this.connectedClients);
   }
 
+  /**
+   * Handles the 'placeBet' event
+   *
+   * This function handles the 'placeBet' event and places a bet for the client.
+   * It then emits 'betPlaced' to the client with the bet data.
+   * @param {Socket} client - The client that placed the bet
+   * @param {PlaceBetData} data - The data of the bet
+   * @returns {void}
+   */
   @SubscribeMessage('placeBet')
-  async handleNewBet(
-    client: Socket,
-    data: { betAmount: number; gameId: number },
-  ): Promise<void> {
+  async handleNewBet(client: Socket, data: PlaceBetData): Promise<void> {
     this.logger.log(`New bet: ${data.gameId} - ${data.betAmount}`);
     const bet = await this.crashService.placeBet(
       data.betAmount,
@@ -134,11 +142,16 @@ export class CrashGateway
     client.emit('betPlaced', bet);
   }
 
+  /**
+   * Handles the 'takeProfit' event
+   *
+   * This function handles the 'takeProfit' event and takes profit for the client.
+   * It then emits 'profitTaken' to the client with the updated bet data.
+   * @param {Socket} client
+   * @param {TakeProfitData} data
+   */
   @SubscribeMessage('takeProfit')
-  async handleTakeProfit(
-    client: Socket,
-    data: { multiplier: number; betId: number },
-  ): Promise<void> {
+  async handleTakeProfit(client: Socket, data: TakeProfitData): Promise<void> {
     this.logger.log(`Taking profit: ${data.betId} - ${data.multiplier}`);
     const bet = await this.crashService.takeProfit(data.betId, data.multiplier);
     client.emit('profitTaken', bet);

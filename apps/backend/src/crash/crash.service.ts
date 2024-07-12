@@ -3,6 +3,8 @@ import { Bet, BetParticipant } from '@prisma/client';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
+import { Multiplier } from 'src/crash/interfaces/multiplier';
+import { GameDto } from './dto/CrashGameDto';
 
 /**
  * CrashService
@@ -59,9 +61,9 @@ export class CrashService {
    *
    * @param {string} hash - A SHA256 hash as a hexadecimal string
    *
-   * @returns {{multiplier: number, hash: string}}  The generated multiplier and the hash used to generate it.
+   * @returns {Multiplier}  The generated multiplier and the hash used to generate it.
    */
-  getMultiplier(hash: string) {
+  getMultiplier(hash: string): Multiplier {
     const e = Math.pow(2, 52);
     const h = parseInt(hash.slice(0, 13), 16);
     if (h % 33 === 0) return { multiplier: 1.0, hash };
@@ -77,9 +79,9 @@ export class CrashService {
    *
    * @param {string} hash A SHA256 hash as a hexadecimal string.
    * @param {number} multiplier The multiplier for the game.
-   * @returns {Promise<Bet>} The created Bet object.
+   * @returns {Promise<GameDto>} The created Bet object.
    */
-  async newGame(hash: string, multiplier: number): Promise<Bet> {
+  async newGame(hash: string, multiplier: number): Promise<GameDto> {
     const newGame = await this.prisma.bet.create({
       data: {
         hash,
@@ -99,7 +101,6 @@ export class CrashService {
    * @returns {Promise<Bet>} The updated Bet object.
    */
   async deactivateGame(gameId: number): Promise<Bet> {
-    console.log('deactivate game');
     const updatedGame = await this.prisma.bet.update({
       where: {
         id: gameId,

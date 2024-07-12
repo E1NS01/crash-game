@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserDto } from './dto/userDto';
 
 @Injectable()
 export class UserService {
@@ -10,9 +10,9 @@ export class UserService {
    * Create a new user
    *
    * Creates a new user with a starting balance of 1000
-   * @returns Promise<User> - The newly created user
+   * @returns Promise<UserDto> - The newly created user
    */
-  async createUser(): Promise<User> {
+  async createUser(): Promise<UserDto> {
     return await this.prisma.user.create({
       data: {
         balance: 1000,
@@ -25,9 +25,9 @@ export class UserService {
    * This function updates a users' balance by a given amount (can be negative to subtract from the balance)
    * @param userId the id of the user to update
    * @param amount the amount to update the users' balance by
-   * @returns Promise<User> - The updated user
+   * @returns Promise<UserDto> - The updated user
    */
-  async updateUserBalance(userId: number, amount: number): Promise<User> {
+  async updateUserBalance(userId: number, amount: number): Promise<UserDto> {
     return await this.prisma.user.update({
       where: {
         id: userId,
@@ -46,9 +46,9 @@ export class UserService {
    * This function retrieves a user from the database by their ID.
    *
    * @param userId - The ID of the user to get
-   * @returns Promise<User> - The user with the given ID
+   * @returns Promise<UserDto> - The user with the given ID
    */
-  async getUserById(userId: number): Promise<User> {
+  async getUserById(userId: number): Promise<UserDto> {
     return await this.prisma.user.findUnique({
       where: {
         id: userId,
