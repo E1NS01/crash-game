@@ -25,7 +25,7 @@ import { PlaceBetData } from './interfaces/placeBetData';
  * - Processing player bets and profit-taking actions
  * - Emitting real-time updates to connected clients
  *
- * The gateway uses SOcket.IO for WebSocket communication and interacts with the CrashService to manage
+ * The gateway uses Socket.IO for WebSocket communication and interacts with the CrashService to manage
  * gamelogic and database operations.
  */
 @WebSocketGateway({
@@ -49,6 +49,13 @@ export class CrashGateway
 
   private crashHash: string;
   private oldCrashHash: string;
+
+  private TARGET_GROWTH_PER_SECOND = 1.1971;
+  private updateFrequency = 1000 / 30;
+  private multiplierIncrease = Math.pow(
+    this.TARGET_GROWTH_PER_SECOND,
+    1 / this.updateFrequency,
+  );
 
   private game: Bet | null;
 
@@ -164,13 +171,16 @@ export class CrashGateway
    * Once it reaches the crash value it stops the multiplier from increasing and deactivates the game.
    * It will then proceed to emit the crash event to the clients.
    *
+   * TODO: Constant interval and ajustable multiplier increase rate
+   *
    * @returns {void}
    */
   startIncreasingMultiplier(): void {
     this.running = true;
+    console.log(this.multiplierIncrease);
     this.multiplierInterval = setInterval(async () => {
       if (!this.running) return;
-      this.multiplier *= 1.003;
+      this.multiplier *= this.multiplierIncrease;
       if (this.multiplier >= this.crashValue) {
         this.stopIncreasingMultiplier();
         await this.crashService.deactivateGame(this.game.id);
@@ -178,7 +188,7 @@ export class CrashGateway
         return;
       }
       this.server.emit('multiUpdate', this.multiplier);
-    }, 1000 / 60);
+    }, this.updateFrequency);
   }
   /**
    * Stops the multiplier from increasing
