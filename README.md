@@ -38,7 +38,9 @@ The project is divided into two main components:
 
 ## Prerequisites
 
-- Node.js
+To ensure a smooth setup and running experience, please have the following installed:
+
+- Node.js (Requires Node.js version 18 or higher.)
 - Docker
 - Docker Compose
 
@@ -56,17 +58,27 @@ git clone https://github.com/E1NS01/crash-game.git
 cd crash-game
 ```
 
-3. Setup the .env file:
+3. Install required packages
 
-   You can find a '.env.example' in the projects root directory. Simply change it from '.env.example' to '.env', or set your own values according to the example.
+```bash
+yarn install
+```
 
-4. Start the application using Docker Compose
+4. Setup the .env file:
+
+   You can find a '.env.example' in the projects root directory. Simply copy '.env.example' to '.env', or set your own values according to the example.
+
+```bash
+cp .env.example .env
+```
+
+5. Start the application using Docker Compose
 
 ```bash
 docker compose up
 ```
 
-4. Once the setup is complete, open your browser and navigate to:
+6. Once the setup is complete, open your browser and navigate to:
 
 ```
 http://localhost:3001
