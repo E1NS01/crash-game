@@ -73,7 +73,7 @@ export default function Pixi() {
     setBackgroundY,
     setRotationFinal,
     updateUserAndBalance,
-    toast,
+    toast
   })
   return (
     <>
