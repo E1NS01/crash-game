@@ -1,5 +1,5 @@
 import { IsInt, IsNumber, IsPositive, validateSync } from 'class-validator';
-import { InvalidInputError } from '../errors/crashErrors';
+import { InvalidInputError } from 'src/common/errors/crashErrors';
 
 class TakeProfitDto {
   @IsPositive()

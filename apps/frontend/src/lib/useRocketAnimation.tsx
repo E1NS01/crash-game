@@ -1,9 +1,8 @@
 import {
   animationSpeed,
   movementSpeed,
-  rotationSpeed,
-} from '@/app/constants/animationConstants'
-import { set } from 'lodash'
+  rotationSpeed
+} from '@/constants/animationConstants'
 import { useEffect } from 'react'
 
 /**
@@ -39,13 +38,13 @@ function useAnimation(
     const rotateSprite = () => {
       if (Math.abs(backgroundX) < 1600) {
         setXPosition(
-          (currentXPosition) => currentXPosition + movementSpeed * 0.7
+          (currentXPosition) => currentXPosition + movementSpeed * 0.65
         )
         setBackgroundX(
           (currentBackgroundX) => currentBackgroundX - movementSpeed * 2
         )
         setYPosition(
-          (currentYPosition) => currentYPosition - movementSpeed * 0.5
+          (currentYPosition) => currentYPosition - movementSpeed * 0.45
         )
         setBackgroundY(
           (currentBackgroundY) => currentBackgroundY + movementSpeed * 3
@@ -70,7 +69,7 @@ function useAnimation(
     setYPosition,
     setBackgroundX,
     setBackgroundY,
-    backgroundX,
+    backgroundX
   ])
 
   useEffect(() => {
@@ -78,7 +77,7 @@ function useAnimation(
 
     function animate(): void {
       setRotation((currentRotation) => {
-        if (currentRotation <= 0.48) {
+        if (currentRotation <= 0.55) {
           setRotationFinal(true)
           return currentRotation
         }

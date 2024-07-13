@@ -8,10 +8,10 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
-import { CrashService } from './crash.service';
-import { UserService } from '../user/user.service';
-import { TakeProfitData } from './interfaces/takeProfitData';
-import { PlaceBetData } from './interfaces/placeBetData';
+import { CrashService } from './service/crash.service';
+import { UserService } from '../user/service/user.service';
+import { TakeProfitData } from '../interfaces/takeProfitData';
+import { PlaceBetData } from '../interfaces/placeBetData';
 import { OnEvent } from '@nestjs/event-emitter';
 /**
  * CrashGateway

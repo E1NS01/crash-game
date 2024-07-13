@@ -27,14 +27,12 @@ export default function Pixi() {
   //pixi.js
   const [rotation, setRotation] = useState<number>(1.5)
   const [rotationFinal, setRotationFinal] = useState<boolean>(false)
-  const [xPosition, setXPosition] = useState<number>(0)
+  const [xPosition, setXPosition] = useState<number>(200)
   const [yPosition, setYPosition] = useState<number>(500)
-  const [thrusterLength, setThrusterLength] = useState<number>(0.01)
   const [backgroundX, setBackgroundX] = useState<number>(0)
   const [backgroundY, setBackgroundY] = useState<number>(-2500)
 
   const scene = process.env.NEXT_PUBLIC_URL + '/planet.jpg'
-  const updatedResultsRef = useRef(false)
   const { toast } = useToast()
   const socket = useMemo(() => initSocket(), [])
   /**
@@ -73,7 +71,6 @@ export default function Pixi() {
     setYPosition,
     setBackgroundX,
     setBackgroundY,
-    setThrusterLength,
     setRotationFinal,
     updateUserAndBalance,
     toast,

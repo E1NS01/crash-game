@@ -39,6 +39,12 @@ export class InvalidMultiplierError extends CrashGameError {
   }
 }
 
+export class InvalidClientMultiplierError extends CrashGameError {
+  constructor(multiplier: number) {
+    super('Invalid client multiplier: ' + multiplier);
+  }
+}
+
 export class InvalidInputError extends CrashGameError {
   constructor(message: string) {
     super(message);

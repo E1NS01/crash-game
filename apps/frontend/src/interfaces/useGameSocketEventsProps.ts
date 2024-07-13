@@ -16,7 +16,6 @@ export interface UseGameSocketEventsProps {
   setYPosition: React.Dispatch<React.SetStateAction<number>>
   setBackgroundX: React.Dispatch<React.SetStateAction<number>>
   setBackgroundY: React.Dispatch<React.SetStateAction<number>>
-  setThrusterLength: React.Dispatch<React.SetStateAction<number>>
   setRotationFinal: React.Dispatch<React.SetStateAction<boolean>>
   updateUserAndBalance: () => void
   toast: (props: {

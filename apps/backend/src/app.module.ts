@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { CrashGateway } from './crash/crash.gateway';
-import { CrashService } from './crash/crash.service';
+import { CrashService } from './crash/service/crash.service';
 import { PrismaService } from './prisma/prisma.service';
 import { UserModule } from './user/user.module';
-import { UserService } from './user/user.service';
+import { UserService } from './user/service/user.service';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { CrashEventEmitter } from './crash/crash.eventEmitter';
+import { CrashDBService } from './crash/service/crashDB.service';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CrashEventEmitter } from './crash/crash.eventEmitter';
   providers: [
     CrashGateway,
     CrashService,
+    CrashDBService,
     PrismaService,
     UserService,
     CrashEventEmitter,

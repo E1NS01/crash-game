@@ -1,109 +1,142 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Socket, Server } from 'socket.io';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CrashGateway } from '../crash.gateway';
-import { CrashService } from '../crash.service';
-import { io as ioc, type Socket as ClientSocket } from 'socket.io-client';
-import { Server, Socket, type Socket as ServerSocket } from 'socket.io';
-import { createServer } from 'http';
-import { AddressInfo } from 'net';
+import { CrashService } from '../service/crash.service';
+import { UserService } from '../../user/service/user.service';
 
 describe('CrashGateway', () => {
   let gateway: CrashGateway;
-  let io: Server;
-  let serverSocket: Socket | ServerSocket;
-  let clientSocket: Socket | ClientSocket;
 
-  beforeAll((done) => {
-    const httpServer = createServer();
-    io = new Server(httpServer);
-    httpServer.listen(() => {
-      const port = (httpServer.address() as AddressInfo).port;
-      clientSocket = ioc(`http://localhost:${port}`);
-      io.on('connection', (socket) => {
-        serverSocket = socket;
-      });
-      clientSocket.on('connect', done);
-    });
-  });
+  const mockCrashService = {
+    initGame: jest.fn(),
+    placeBet: jest.fn(),
+    takeProfit: jest.fn(),
+  };
+
+  const mockUserService = {
+    getUserById: jest.fn(),
+    createUser: jest.fn(),
+  };
+
+  const mockServer = {
+    emit: jest.fn(),
+  };
+
+  const mockClient = {
+    emit: jest.fn(),
+  };
 
   beforeEach(async () => {
-    // Mocking the CrashGateway for easier testing
-    const mockCrashService = {};
-    const mockGateway = {
-      connectedClients: 0,
-      handleConnection: jest.fn().mockImplementation(() => {
-        mockGateway.connectedClients++;
-        serverSocket.emit('connectedClients', mockGateway.connectedClients);
-      }),
-      handleDisconnect: jest.fn().mockImplementation(() => {
-        mockGateway.connectedClients--;
-        serverSocket.emit('connectedClients', mockGateway.connectedClients);
-      }),
-      handleGetConnectedClients: jest.fn().mockImplementation(() => {
-        return mockGateway.connectedClients;
-      }),
-      afterInit: jest.fn().mockImplementation(() => {
-        mockGateway.delayBetweenGames();
-      }),
-      delayBetweenGames: jest.fn().mockImplementation((end: boolean) => {
-        if (end) {
-          return;
-        }
-        mockGateway.startIncreasingMultiplier();
-      }),
-      startIncreasingMultiplier: jest.fn().mockImplementation(() => {
-        mockGateway.stopIncreasingMultiplier();
-      }),
-      stopIncreasingMultiplier: jest.fn().mockImplementation(() => {
-        mockGateway.delayBetweenGames(true);
-      }),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        { provide: CrashGateway, useValue: mockGateway },
+        CrashGateway,
         { provide: CrashService, useValue: mockCrashService },
+        { provide: UserService, useValue: mockUserService },
+        EventEmitter2,
       ],
     }).compile();
 
     gateway = module.get<CrashGateway>(CrashGateway);
+    gateway.server = mockServer as unknown as Server;
   });
 
-  afterAll(() => {
-    io.close();
-    clientSocket.disconnect();
+  it('should be defined', () => {
+    expect(gateway).toBeDefined();
   });
 
-  // Test if the gateway is handling new connections
-  it('should handle new client connections', () => {
-    gateway.handleConnection();
-    clientSocket.on('connectedClients', (connectedClients) => {
-      expect(connectedClients).toBe(1);
+  describe('afterInit', () => {
+    it('should initialize the game and create a user if none exists', async () => {
+      mockUserService.getUserById.mockResolvedValue(null);
+      await gateway.afterInit();
+      expect(mockUserService.getUserById).toHaveBeenCalledWith(1);
+      expect(mockUserService.createUser).toHaveBeenCalled();
+      expect(mockCrashService.initGame).toHaveBeenCalled();
+    });
+
+    it('should not create a user if one already exists', async () => {
+      mockUserService.getUserById.mockResolvedValue({ id: 1 });
+      await gateway.afterInit();
+      expect(mockUserService.getUserById).toHaveBeenCalledWith(1);
+      expect(mockUserService.createUser).toHaveBeenCalledTimes(1);
+      expect(mockCrashService.initGame).toHaveBeenCalled();
     });
   });
 
-  it('should handle client disconnections', () => {
-    gateway.handleConnection();
-    clientSocket.on('connectedClients', (connectedClients) => {
-      expect(connectedClients).toBe(1);
+  describe('handleConnection', () => {
+    it('should increment connected clients and emit count', () => {
+      gateway.handleConnection();
+      expect(mockServer.emit).toHaveBeenCalledWith('connectedClients', 1);
     });
-    gateway.handleDisconnect();
-    expect(gateway.handleGetConnectedClients(clientSocket as Socket)).toBe(0);
   });
 
-  it('should rotate through game states after initialization', () => {
-    const delayBetweenGamesSpy = jest.spyOn(gateway, 'delayBetweenGames');
-    const startIncreasingMultiplierSpy = jest.spyOn(
-      gateway,
-      'startIncreasingMultiplier',
-    );
-    const stopIncreasingMultiplierSpy = jest.spyOn(
-      gateway,
-      'stopIncreasingMultiplier',
-    );
-    gateway.afterInit();
+  describe('handleDisconnect', () => {
+    it('should decrement connected clients and emit count', () => {
+      gateway.handleConnection();
+      gateway.handleDisconnect();
+      expect(mockServer.emit).toHaveBeenCalledWith('connectedClients', 0);
+    });
+  });
 
-    expect(stopIncreasingMultiplierSpy).toHaveBeenCalled();
-    expect(startIncreasingMultiplierSpy).toHaveBeenCalled();
-    expect(delayBetweenGamesSpy).toHaveBeenCalledTimes(2);
+  describe('handleGetConnectedClients', () => {
+    it('should emit connected clients count to the client', () => {
+      gateway.handleConnection();
+      gateway.handleGetConnectedClients(mockClient as unknown as Socket);
+      expect(mockClient.emit).toHaveBeenCalledWith('connectedClients', 1);
+    });
+  });
+
+  describe('handleNewBet', () => {
+    it('should place a bet and emit bet placed event', async () => {
+      const betData = { gameId: 1, betAmount: 100 };
+      const placedBet = { id: 1, amount: 100 };
+      mockCrashService.placeBet.mockResolvedValue(placedBet);
+
+      await gateway.handleNewBet(mockClient as unknown as Socket, betData);
+
+      expect(mockCrashService.placeBet).toHaveBeenCalledWith(100, 1, 1);
+      expect(mockClient.emit).toHaveBeenCalledWith('betPlaced', placedBet);
+    });
+  });
+
+  describe('handleTakeProfit', () => {
+    it('should take profit and emit profit taken event', async () => {
+      const profitData = { betId: 1, multiplier: 2 };
+      const updatedBet = { id: 1, amount: 200 };
+      mockCrashService.takeProfit.mockResolvedValue(updatedBet);
+
+      await gateway.handleTakeProfit(
+        mockClient as unknown as Socket,
+        profitData,
+      );
+
+      expect(mockCrashService.takeProfit).toHaveBeenCalledWith(1, 2);
+      expect(mockClient.emit).toHaveBeenCalledWith(
+        'profitTaken',
+        updatedBet,
+        2,
+      );
+    });
+  });
+
+  describe('handleMultiplierEvent', () => {
+    it('should emit multiplier update to all clients', () => {
+      gateway.handleMultiplierEvent(1.5);
+      expect(mockServer.emit).toHaveBeenCalledWith('multiUpdate', 1.5);
+    });
+  });
+
+  describe('handleCrashEvent', () => {
+    it('should emit crash event to all clients', () => {
+      gateway.handleCrashEvent(2, 'hash123');
+      expect(mockServer.emit).toHaveBeenCalledWith('crash', 2, 'hash123');
+    });
+  });
+
+  describe('handleNewGameEvent', () => {
+    it('should emit new game event to all clients', () => {
+      gateway.handleNewGameEvent(2);
+      expect(mockServer.emit).toHaveBeenCalledWith('newGame', 2);
+    });
   });
 });

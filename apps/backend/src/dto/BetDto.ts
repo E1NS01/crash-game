@@ -1,4 +1,4 @@
-import { IsBoolean, IsNumber } from 'class-validator';
+import { IsNumber, IsBoolean } from 'class-validator';
 
 export class BetDto {
   @IsNumber()

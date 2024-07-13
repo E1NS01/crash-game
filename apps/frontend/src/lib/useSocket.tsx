@@ -30,7 +30,6 @@ import { Socket } from 'socket.io-client'
  * @param setYPosition
  * @param setBackgroundX
  * @param setBackgroundY
- * @param setThrusterLength
  * @param setRotationFinal
  * @param updateUserAndBalance
  * @param toast
@@ -49,7 +48,6 @@ export function useGameSocket({
   setYPosition,
   setBackgroundX,
   setBackgroundY,
-  setThrusterLength,
   setRotationFinal,
   updateUserAndBalance,
   toast,
@@ -89,7 +87,6 @@ export function useGameSocket({
         setYPosition(500)
         setBackgroundX(0)
         setBackgroundY(-2500)
-        setThrusterLength(0.01)
         setRotationFinal(false)
         updatedResultsRef.current = false
       }, 5000)
@@ -160,7 +157,6 @@ export function useGameSocket({
     setYPosition,
     setBackgroundX,
     setBackgroundY,
-    setThrusterLength,
     setRotationFinal,
   ])
 }

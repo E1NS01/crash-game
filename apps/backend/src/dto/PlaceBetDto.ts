@@ -1,5 +1,5 @@
 import { IsPositive, IsInt, validateSync } from 'class-validator';
-import { InvalidInputError } from '../errors/crashErrors';
+import { InvalidInputError } from '../common/errors/crashErrors';
 
 class PlaceBetDto {
   @IsPositive()
@@ -15,7 +15,7 @@ class PlaceBetDto {
   gameId: number;
 }
 
-export function validatePlaceBetInput(input: PlaceBetDto): void {
+export default function validatePlaceBetInput(input: PlaceBetDto): void {
   const errors = validateSync(input);
   if (errors.length > 0) {
     throw new InvalidInputError('errors: ' + errors.join(', '));

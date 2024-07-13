@@ -14,17 +14,9 @@ services:
     build:
       context: .
       dockerfile: ./docker/backend.dev.Dockerfile
-    develop:
-      context: .
-      dockerfile: ./docker/backend.dev.Dockerfile
-      watch:
-        - action: sync
-          path: ./apps/backend
-          target: /app
-          ignore:
-            - node_modules
-        - action: rebuild
-          path: package.json
+    volumes:
+      - ./apps/backend:/app
+      - /app/node_modules
     ports:
       - '3000:3000'
     environment:
@@ -33,6 +25,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - INCREASE_PER_SECOND=1.1971
+      - UPDATE_FREQUENCY=60
     depends_on:
       - db
 
@@ -41,8 +35,8 @@ services:
       context: .
       dockerfile: ./docker/frontend.dev.Dockerfile
     volumes:
-      - ./apps/frontend:/app # Mount the source code directory to the container
-      - /app/node_modules # Use a named volume for node_modules to avoid overriding the container's node_modules with the host's
+      - ./apps/frontend:/app
+      - /app/node_modules
     ports:
       - '3001:3001'
     depends_on:

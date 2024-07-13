@@ -1,7 +1,10 @@
 import { Body, Controller, Get, Post, Put, Query } from '@nestjs/common';
-import { UserService } from './user.service';
-import { UserDto } from './dto/userDto';
-import { UpdateBalanceData } from './interfaces/updateBalanceData';
+import { UserService } from '../service/user.service';
+import { UserDto } from '../../dto/userDto';
+import {
+  UpdateBalanceData,
+  validateUpdateBalanceData,
+} from '../../dto/updateBalanceDto';
 
 @Controller('user')
 export class UserController {
@@ -51,6 +54,7 @@ export class UserController {
   @Put()
   async updateUserBalance(@Body() data: UpdateBalanceData): Promise<UserDto> {
     try {
+      validateUpdateBalanceData(data);
       const user = await this.userService.updateUserBalance(
         data.userId,
         data.amount,
