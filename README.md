@@ -4,7 +4,7 @@
 
 Crash Game is an exciting multiplayer betting game where players wager on an increasing multiplier. The game features a space-themed interface with a rocket that climbs higher as the multiplier increases.
 
-![Crash Game Screenshot](assets/crash-game-screenshot.png)
+![Crash Game Screenshot](assets/CrashGameScreenshot.png)
 
 ## How It Works
 
@@ -24,9 +24,8 @@ Crash Game is an exciting multiplayer betting game where players wager on an inc
 
 ## Key Features
 
-- Real-time multiplayer gameplay
 - Dynamic multiplier display
-- Space-themed visual interface with an animated rocket
+- Visual interface with an animated rocket
 - User balance management
 - Bet placement and profit-taking mechanics
 
@@ -34,8 +33,8 @@ Crash Game is an exciting multiplayer betting game where players wager on an inc
 
 The project is divided into two main components:
 
-1. Frontend: Built with NextJS and PixiJS, with the core game logic implemented in the PixiJS stage.
-2. Backend: NestJS application with a PostgreSQL database, featuring a CrashGateway that manages the game loop.
+1. Frontend: Built with NextJS and PixiJS
+2. Backend: NestJS application with a PostgreSQL database.
 
 ## Prerequisites
 
