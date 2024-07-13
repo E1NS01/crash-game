@@ -4,7 +4,7 @@
 
 Crash Game is an exciting multiplayer betting game where players wager on an increasing multiplier. The game features a space-themed interface with a rocket that climbs higher as the multiplier increases.
 
-![Crash Game Screenshot](assets/CrashGameScreenshot.png)
+![Crash Game Gif](assets/GameGif.gif)
 
 ## How It Works
 
