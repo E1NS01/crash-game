@@ -11,9 +11,9 @@ import {
   InvalidMultiplierError,
 } from '../../common/errors/crashErrors';
 import { CrashEventEmitter } from '../crash.eventEmitter';
-import { CrashDBService } from './crashDB.service';
-import validatePlaceBetInput from 'src/dto/PlaceBetDto';
-import validateTakeProfitInput from 'src/dto/TakeProfitDto';
+import { CrashDBService } from '../service/crashDB.service';
+import validatePlaceBetInput from '../../dto/PlaceBetDto';
+import validateTakeProfitInput from '../../dto/TakeProfitDto';
 
 /**
  * CrashService

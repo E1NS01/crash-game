@@ -1,81 +1,90 @@
-# Turborepo starter
+# Crash Game
 
-This is an official starter Turborepo.
+## Overview
 
-## Using this example
+Crash Game is an exciting multiplayer betting game where players wager on an increasing multiplier. The game features a space-themed interface with a rocket that climbs higher as the multiplier increases.
 
-Run the following command:
+![Crash Game Screenshot](path/to/your/screenshot.png)
 
-```sh
-npx create-turbo@latest
+## How It Works
+
+1. Players place a bet on an increasing multiplier.
+2. As the game progresses, the multiplier increases, and players can choose to cash out at any time to secure their profits.
+3. The backend calculates a secret "crash value" at which the game will stop.
+4. If a player hasn't cashed out when the crash value is reached, they lose their bet.
+5. The game continues until the crash point, rewarding strategic players who cash out in time.
+
+## Technologies Used
+
+- Frontend: TypeScript, NextJS, PixiJS
+- Backend: NestJS, PostgreSQL
+- Real-time Communication: Socket.IO
+- API: RESTful API for user-related operations
+- Development Environment: Docker
+
+## Key Features
+
+- Real-time multiplayer gameplay
+- Dynamic multiplier display
+- Space-themed visual interface with an animated rocket
+- User balance management
+- Bet placement and profit-taking mechanics
+
+## Project Structure
+
+The project is divided into two main components:
+
+1. Frontend: Built with NextJS and PixiJS, with the core game logic implemented in the PixiJS stage.
+2. Backend: NestJS application with a PostgreSQL database, featuring a CrashGateway that manages the game loop.
+
+## Prerequisites
+
+- Node.js
+- Docker
+- Docker Compose
+
+## Installation and Running
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/E1NS01/crash-game.git
 ```
 
-## What's inside?
+2. Navigate to the project directory
 
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm build
+```bash
+cd crash-game
 ```
 
-### Develop
+3. Start the application using Docker Compose
 
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm dev
+```bash
+docker compose up
 ```
 
-### Remote Caching
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
+4. Once the setup is complete, open your browser and navigate to:
 
 ```
-cd my-turborepo
-npx turbo login
+http://localhost:3001
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## Development
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+This project uses a Docker development environment. Ensure you have Docker and Docker Compose installed and running on your system before starting the application.
 
+### Backend Development
+
+The backend is built with NestJS and uses PostgreSQL as the database. It handles game logic, user management, and real-time communication.
+
+### Frontend Development
+
+The frontend is a Next.js application with TypeScript. It uses PixiJS for rendering the game graphics and Socket.IO for real-time updates.
+
+## Testing
+
+To run the tests, use the following command:
+
+```bash
+yarn test
 ```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)

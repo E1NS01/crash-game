@@ -3,6 +3,7 @@ import { CrashService } from '../service/crash.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserService } from '../../user/service/user.service';
 import { CrashEventEmitter } from '../crash.eventEmitter';
+import { CrashDBService } from '../service/crashDB.service';
 
 const mockEventEmitter = {
   sendMultiplierEvent: jest.fn(),
@@ -18,6 +19,7 @@ describe('CrashService', () => {
         CrashService,
         PrismaService,
         UserService,
+        CrashDBService,
         { provide: CrashEventEmitter, useValue: mockEventEmitter },
       ],
       imports: [],
