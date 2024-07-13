@@ -9,12 +9,12 @@ import { Socket } from 'socket.io-client'
  *
  * This hook listens to the game socket events and updates the game state accoring to the events.
  * It handles the following events:
- * - connectedClients
- * - multiUpdate
- * - crash
- * - newGame
- * - betPlaced
- * - profitTaken
+ * - connectedClients - updates the player count
+ * - multiUpdate - updates the multiplier
+ * - crash  - updates the multiplier and sets the game to crashed
+ * - newGame  - updates the game id and resets the rocket position
+ * - betPlaced  - updates the bet id and balance and shows a toast message
+ * - profitTaken  - shows a toast message and updates the bet id and balance
  *
  *
  * @param socket
@@ -50,7 +50,7 @@ export function useGameSocket({
   setBackgroundY,
   setRotationFinal,
   updateUserAndBalance,
-  toast,
+  toast
 }: UseGameSocketEventsProps) {
   const updatedResultsRef = useRef(false)
 
@@ -99,14 +99,14 @@ export function useGameSocket({
           toast({
             variant: 'destructive',
             title: 'Can not place bet!',
-            description: data.error,
+            description: data.error
           })
           return
         }
         toast({
           variant: 'default',
           title: 'Bet placed!',
-          description: `Bet placed with amount: ${data.amount}`,
+          description: `Bet placed with amount: ${data.amount}`
         })
         updateUserAndBalance()
         setBetId(data.id!)
@@ -120,12 +120,12 @@ export function useGameSocket({
           toast({
             variant: 'destructive',
             title: 'Can not take profit!',
-            description: data.error,
+            description: data.error
           })
         } else {
           toast({
             title: 'Profit taken!',
-            description: `Profit taken with amount: ${(data.amount! * betMultiplier).toFixed(2)}`,
+            description: `Profit taken with amount: ${(data.amount! * betMultiplier).toFixed(2)}`
           })
           setBetId('no active bet')
           updateUserAndBalance()
@@ -157,6 +157,6 @@ export function useGameSocket({
     setYPosition,
     setBackgroundX,
     setBackgroundY,
-    setRotationFinal,
+    setRotationFinal
   ])
 }

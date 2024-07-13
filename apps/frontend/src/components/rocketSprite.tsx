@@ -1,6 +1,6 @@
 'use client'
 import { RocketData } from '@/interfaces/rocketData'
-import useAnimation from '@/lib/useRocketAnimation'
+import useRocketAnimation from '@/lib/useRocketAnimation'
 import { Sprite } from '@pixi/react'
 
 export default function RocketSprite({
@@ -16,12 +16,12 @@ export default function RocketSprite({
   setRotationFinal,
   setRotation,
   setBackgroundX,
-  setBackgroundY,
+  setBackgroundY
 }: RocketData) {
   const rocket = process.env.NEXT_PUBLIC_URL + '/3drocket.png'
   const explosion = process.env.NEXT_PUBLIC_URL + '/explode-small.png'
 
-  useAnimation(
+  useRocketAnimation(
     running,
     backgroundX,
     setXPosition,

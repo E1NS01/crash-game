@@ -8,9 +8,14 @@ import { useEffect } from 'react'
 /**
  * useRocketAnimation
  *
- * @description Custom hook for animating the rocket sprite
+ * @description Custom hook for animating the rocket sprite.
+ 
+ * The rocket sprite is moved by changing the x and y position of the sprite, and rotatd by changing the sprites' rotation.
+ * The background is moved by changing the backgroundX and backgroundY position.
+ * 
  *
  * @param running
+ * @param backgroundX
  * @param setXPosition
  * @param setYPosition
  * @param setBackgroundX
@@ -18,10 +23,8 @@ import { useEffect } from 'react'
  * @param rotationFinal
  * @param setRotation
  * @param setRotationFinal
- * @param initialMovementSpeedX
- * @param initialMovementSpeedY
  */
-function useAnimation(
+function useRocketAnimation(
   running: boolean,
   backgroundX: number,
   setXPosition: React.Dispatch<React.SetStateAction<number>>,
@@ -38,13 +41,13 @@ function useAnimation(
     const rotateSprite = () => {
       if (Math.abs(backgroundX) < 1600) {
         setXPosition(
-          (currentXPosition) => currentXPosition + movementSpeed * 0.65
+          (currentXPosition) => currentXPosition + movementSpeed * 0.6
         )
         setBackgroundX(
           (currentBackgroundX) => currentBackgroundX - movementSpeed * 2
         )
         setYPosition(
-          (currentYPosition) => currentYPosition - movementSpeed * 0.45
+          (currentYPosition) => currentYPosition - movementSpeed * 0.43
         )
         setBackgroundY(
           (currentBackgroundY) => currentBackgroundY + movementSpeed * 3
@@ -101,4 +104,4 @@ function useAnimation(
   }, [running, setRotation, setRotationFinal])
 }
 
-export default useAnimation
+export default useRocketAnimation

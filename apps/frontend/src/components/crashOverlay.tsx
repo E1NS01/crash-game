@@ -13,7 +13,7 @@ export default function CrashOverlay() {
         y={0}
         width={800}
         height={600}
-        alpha={0.3}
+        alpha={0.6}
       />
       <Text
         text={`Waiting for next round...`}
