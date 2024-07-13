@@ -57,7 +57,8 @@ cd crash-game
 ```
 
 3. Setup the .env file:
-   You can find
+
+   You can find a '.env.example' in the projects root directory. Simply change it from '.env.example' to '.env', or set your own values according to the example.
 
 4. Start the application using Docker Compose
 
