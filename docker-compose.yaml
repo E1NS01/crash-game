@@ -20,7 +20,6 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - POSTGRES_HOST=postgres
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
@@ -39,6 +38,10 @@ services:
       - /app/node_modules
     ports:
       - '3001:3001'
+    environment:
+      - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}
     depends_on:
       - backend
     command: npm run dev

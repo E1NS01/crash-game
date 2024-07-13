@@ -56,7 +56,10 @@ git clone https://github.com/E1NS01/crash-game.git
 cd crash-game
 ```
 
-3. Start the application using Docker Compose
+3. Setup the .env file:
+   You can find
+
+4. Start the application using Docker Compose
 
 ```bash
 docker compose up
