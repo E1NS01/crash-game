@@ -8,6 +8,8 @@ RUN npm install
 
 COPY apps/backend ./
 
+RUN npm install -g prisma @nestjs/cli
+
 COPY entrypoint.dev.sh /entrypoint.dev.sh
 RUN chmod +x /entrypoint.dev.sh
 

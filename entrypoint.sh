@@ -5,7 +5,7 @@ set -e
 sleep 5
 
 # Run Prisma migrations
-npx prisma migrate dev
+npx prisma migrate deploy
 
 # Start the NestJS application
 npm run start:prod

@@ -6,6 +6,8 @@ COPY apps/backend/package*.json ./
 RUN npm install
 COPY apps/backend/dist ./dist
 COPY apps/backend/prisma ./prisma
+RUN npm install -g prisma @nestjs/cli
+RUN npx prisma generate
 
 
 COPY entrypoint.sh /entrypoint.sh
