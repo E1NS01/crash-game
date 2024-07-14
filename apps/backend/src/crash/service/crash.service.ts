@@ -13,7 +13,6 @@ import { CrashEventEmitter } from '../crash.eventEmitter';
 import { CrashDBService } from '../service/crashDB.service';
 import validatePlaceBetInput from '../../dto/PlaceBetDto';
 import validateTakeProfitInput from '../../dto/TakeProfitDto';
-import { UserService } from 'src/user/service/user.service';
 
 /**
  * CrashService
@@ -55,7 +54,6 @@ export class CrashService {
   constructor(
     private crashEventEmitter: CrashEventEmitter,
     private crashDBService: CrashDBService,
-    private userService: UserService,
   ) {}
   private logger: Logger = new Logger('CrashService');
 

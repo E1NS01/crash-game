@@ -1,18 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
 import { Bet, BetParticipant } from '@prisma/client';
+import { GameDto } from 'src/dto/CrashGameDto';
+import {
+  BalanceTooLowError,
+  UserNotFoundError,
+} from 'src/common/errors/userErrors';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UserService } from 'src/user/service/user.service';
 import {
   BetNotFoundError,
   GameNotActiveError,
   MultipleBetsError,
   UserAlreadyProfitedError,
-} from '../../common/errors/crashErrors';
-import { GameDto } from 'src/dto/CrashGameDto';
-import { UserService } from 'src/user/service/user.service';
-import {
-  BalanceTooLowError,
-  UserNotFoundError,
-} from 'src/common/errors/userErrors';
+} from 'src/common/errors/crashErrors';
 
 @Injectable()
 export class CrashDBService {

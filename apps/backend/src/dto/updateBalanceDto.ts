@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsNumber, validateSync } from 'class-validator';
-import { InvalidInputError } from '../common/errors/crashErrors';
+import { InvalidInputError } from 'src/common/errors/crashErrors';
 
 export class UpdateBalanceData {
   @IsNotEmpty()

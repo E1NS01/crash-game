@@ -3,7 +3,7 @@ import { Socket, Server } from 'socket.io';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CrashGateway } from '../crash.gateway';
 import { CrashService } from '../service/crash.service';
-import { UserService } from '../../user/service/user.service';
+import { UserService } from 'src/user/service/user.service';
 
 describe('CrashGateway', () => {
   let gateway: CrashGateway;

@@ -18,7 +18,6 @@ describe('PrismaService', () => {
   });
 
   it('should be defined', () => {
-    console.log(process.env.DATABASE_URL);
     expect(prismaService).toBeDefined();
   });
 

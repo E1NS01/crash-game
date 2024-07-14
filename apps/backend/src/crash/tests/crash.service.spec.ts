@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CrashService } from '../service/crash.service';
-import { PrismaService } from '../../prisma/prisma.service';
-import { UserService } from '../../user/service/user.service';
-import { CrashEventEmitter } from '../crash.eventEmitter';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UserService } from 'src/user/service/user.service';
 import { CrashDBService } from '../service/crashDB.service';
+import { CrashEventEmitter } from '../crash.eventEmitter';
 
 const mockEventEmitter = {
   sendMultiplierEvent: jest.fn(),
