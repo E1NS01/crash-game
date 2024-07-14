@@ -1,4 +1,3 @@
-'use cliet'
 import { Texture } from '@pixi/core'
 import { Sprite, Text } from '@pixi/react'
 import { TextStyle } from '@pixi/text'

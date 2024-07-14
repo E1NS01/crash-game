@@ -1,4 +1,3 @@
-'use client'
 import { RocketData } from '@/interfaces/rocketData'
 import useRocketAnimation from '@/lib/useRocketAnimation'
 import { Sprite } from '@pixi/react'

@@ -12,7 +12,7 @@ import BettingControls from './bettingControls'
 import { useToast } from './ui/use-toast'
 import { useGameSocket } from '@/lib/useSocket'
 
-export default function Pixi() {
+export default function Game() {
   //game state
   const [multiplier, setMultiplier] = useState<number>(1)
   const [lastResults, setLastResults] = useState<LastResultsData[]>([])

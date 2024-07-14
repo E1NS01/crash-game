@@ -1,8 +1,7 @@
-'use client'
 import { LastResultsData } from '@/interfaces/lastResultsData'
 
 export default function LastResults({
-  results,
+  results
 }: {
   results: LastResultsData[]
 }) {

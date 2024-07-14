@@ -8,4 +8,4 @@ sleep 5
 npx prisma migrate dev
 
 # Start the NestJS application
-npm run start:prod
+npm run dev

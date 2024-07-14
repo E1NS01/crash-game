@@ -1,4 +1,4 @@
-name: 'crashgame-prod'
+name: 'crashgame-dev'
 
 services:
   db:
@@ -15,7 +15,10 @@ services:
   backend:
     build:
       context: .
-      dockerfile: ./docker/backend.Dockerfile
+      dockerfile: ./docker/backend.dev.Dockerfile
+    volumes:
+      - ./apps/backend:/app
+      - /app/node_modules
     ports:
       - '3000:3000'
     environment:
@@ -32,7 +35,10 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: ./docker/frontend.Dockerfile
+      dockerfile: ./docker/frontend.dev.Dockerfile
+    volumes:
+      - ./apps/frontend:/app
+      - /app/node_modules
     ports:
       - '3001:3001'
     environment:
@@ -41,6 +47,7 @@ services:
       - NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}
     depends_on:
       - backend
+    command: npm run dev
 
 volumes:
   db-data:
