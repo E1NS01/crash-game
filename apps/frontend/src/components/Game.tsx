@@ -1,5 +1,5 @@
 'use client'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Sprite, Stage } from '@pixi/react'
 import { initSocket } from '@/helper/socketio'
 import { getUserById } from '@/helper/apiCalls'
