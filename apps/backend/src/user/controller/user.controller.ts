@@ -1,10 +1,10 @@
 import { Body, Controller, Get, Post, Put, Query } from '@nestjs/common';
 import { UserService } from '../service/user.service';
-import { UserDto } from '../../dto/userDto';
+import { UserDto } from 'src/dto/userDto';
 import {
   UpdateBalanceData,
   validateUpdateBalanceData,
-} from '../../dto/updateBalanceDto';
+} from 'src/dto/updateBalanceDto';
 
 @Controller('user')
 export class UserController {
