@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Bet, BetParticipant } from '@prisma/client';
 import * as crypto from 'crypto';
-import { PrismaService } from '../../prisma/prisma.service';
 import { Multiplier } from 'src/interfaces/multiplier';
 import {
   BetAmountTooHighError,
@@ -14,6 +13,7 @@ import { CrashEventEmitter } from '../crash.eventEmitter';
 import { CrashDBService } from '../service/crashDB.service';
 import validatePlaceBetInput from '../../dto/PlaceBetDto';
 import validateTakeProfitInput from '../../dto/TakeProfitDto';
+import { UserService } from 'src/user/service/user.service';
 
 /**
  * CrashService
@@ -54,8 +54,8 @@ export class CrashService {
 
   constructor(
     private crashEventEmitter: CrashEventEmitter,
-    private prisma: PrismaService,
     private crashDBService: CrashDBService,
+    private userService: UserService,
   ) {}
   private logger: Logger = new Logger('CrashService');
 
@@ -240,6 +240,7 @@ export class CrashService {
       if (Math.floor((amount * 100) / 100) !== amount) {
         throw new InvalidBetAmountError(amount);
       }
+
       return await this.crashDBService.placeBetTransaction(
         amount,
         userId,

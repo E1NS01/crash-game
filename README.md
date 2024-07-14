@@ -75,7 +75,7 @@ cp .env.example .env
 5. Start the application using Docker Compose
 
 ```bash
-docker compose up
+yarn start
 ```
 
 6. Once the setup is complete, open your browser and navigate to:

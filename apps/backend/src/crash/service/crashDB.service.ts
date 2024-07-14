@@ -8,11 +8,19 @@ import {
   UserAlreadyProfitedError,
 } from '../../common/errors/crashErrors';
 import { GameDto } from 'src/dto/CrashGameDto';
+import { UserService } from 'src/user/service/user.service';
+import {
+  BalanceTooLowError,
+  UserNotFoundError,
+} from 'src/common/errors/userErrors';
 
 @Injectable()
 export class CrashDBService {
   private logger = new Logger('CrashDBService');
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
+  ) {}
 
   /**
    * Creates a new Crash game entry in the Database
@@ -127,6 +135,14 @@ export class CrashDBService {
         }
         if (!bet.active) {
           throw new GameNotActiveError(gameId);
+        }
+
+        const user = await this.userService.getUserById(userId);
+        if (!user) {
+          throw new UserNotFoundError(userId);
+        }
+        if (user.balance < amount) {
+          throw new BalanceTooLowError(userId, amount, user.balance);
         }
 
         await prisma.user.update({

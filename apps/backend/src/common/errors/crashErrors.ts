@@ -1,4 +1,3 @@
-// Base custom error class
 export class CrashGameError extends Error {
   constructor(message: string) {
     super(message);
