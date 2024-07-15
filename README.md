@@ -64,21 +64,15 @@ cd crash-game
 yarn install
 ```
 
-4. Setup the .env file:
-
-   You can find a '.env.example' in the projects root directory. Simply copy '.env.example' to '.env', or set your own values according to the example.
-
-```bash
-cp .env.example .env
-```
-
-5. Start the application using Docker Compose
+4. Start the application using Docker Compose
 
 ```bash
 yarn start
 ```
 
-6. Once the setup is complete, open your browser and navigate to:
+- This command duplicates the .env.example file, creating a .env file in the project's root directory as well as within both the frontend and backend folders.
+
+5. Once the setup is complete, open your browser and navigate to:
 
 ```
 http://localhost:3001

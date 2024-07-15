@@ -2,8 +2,9 @@
   "name": "crash-game",
   "private": true,
   "scripts": {
-    "start": "turbo build && docker compose up",
-    "build": "turbo build",
+    "setup-env": "cp .env.example .env && cp ./apps/frontend/.env.example ./apps/frontend/.env && cp ./apps/backend/.env.example ./apps/backend/.env",
+    "start": "yarn build && docker compose up",
+    "build": "yarn setup-env && turbo build",
     "dev": "docker compose -f docker-compose.dev.yaml up",
     "dev:local": "turbo dev",
     "test": "turbo test",
