@@ -17,23 +17,17 @@ import validateTakeProfitInput from '../../dto/TakeProfitDto';
 /**
  * CrashService
  *
- * This service manages the core functionality of the Crash game. A game of Crash is a simple game where a multiplier increases over time.
+ * This service manages the core functionality of the Crash game.
  *
  * Key responsibilities:
  * - Initializing a new game loop
  * - Starting and stopping the multiplier increase
  * - Delaying the next game
  * - Generating game hashes and multipliers
- * - Creating and managing game instance in the Database
- * - Handling player bets and profit-taking
- * - Managing game state (active/inactive)
+ * - Placing bets and taking profit
+ * - Validating input and throwing errors when necessary
  *
- * The service uses cryptographic functions to generate provably fair hashes and unpredictable game outcomes,
- * and it interacts with the database through Prisma to persist game data and player actions.
- *
- * Usage:
- * This service should be injected into the CrashGateway or other services that need to interact with the Crash game machanics.
- * It provides methods for all core game operations, from initiating new games to processing player actions.
+ * The service uses cryptographic functions to generate provably fair hashes and unpredictable game outcomes.
  */
 @Injectable()
 export class CrashService {

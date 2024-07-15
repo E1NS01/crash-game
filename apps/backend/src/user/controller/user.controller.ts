@@ -6,6 +6,19 @@ import {
   validateUpdateBalanceData,
 } from 'src/dto/updateBalanceDto';
 
+/**
+ * UserController
+ *
+ * This controller manages the user endpoints.
+ *
+ * Key responsibilities:
+ * - Getting a user by their ID
+ * - Creating a new user
+ * - Updating a user's balance
+ *
+ * The controller uses the UserService to interact with the Database.
+ */
+
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

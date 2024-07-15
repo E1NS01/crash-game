@@ -14,6 +14,19 @@ import {
   UserAlreadyProfitedError,
 } from 'src/common/errors/crashErrors';
 
+/**
+ * CrashDBService
+ * This service manages the interaction with the Database for the Crash game.
+ *
+ * Key resposibilities:
+ * - Creating a new Crash game entry
+ * - Deactivating a Crash game
+ * - Getting the last Crash game
+ * - Placing a bet on a Crash game
+ * - Taking profit from a Crash game
+ *
+ * The service uses the PrismaService to interact with the Database.
+ */
 @Injectable()
 export class CrashDBService {
   private logger = new Logger('CrashDBService');

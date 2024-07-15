@@ -2,6 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { UserDto } from 'src/dto/userDto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
+/**
+ * UserService
+ *
+ * This service manages the core functionality of the User entity.
+ *
+ * Key responsibilities:
+ * - Creating a new user
+ * - Updating a user's balance
+ * - Getting a user by their ID
+ * - Getting a user's balance
+ *
+ * The service uses the PrismaService to interact with the Database.
+ */
+
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}

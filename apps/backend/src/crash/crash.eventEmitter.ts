@@ -1,6 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
+/**
+ * CrashEventEmitter
+ *
+ * This service emits events to the EventListener
+ *
+ * Key responsibilities:
+ * - Sending a multiplier event
+ * - Sending a crash event
+ * - Sending a new game event
+ *
+ * The service uses the EventEmitter2 to emit events to the EventListener.
+ */
+
 @Injectable()
 export class CrashEventEmitter {
   constructor(private eventEmitter: EventEmitter2) {}
