@@ -19,8 +19,6 @@ Crash Game is an exciting multiplayer betting game where players wager on an inc
 - Frontend: TypeScript, NextJS, PixiJS
 - Backend: NestJS, PostgreSQL
 - Real-time Communication: Socket.IO
-- API: RESTful API for user-related operations
-- Development Environment: Docker
 
 ## Key Features
 
